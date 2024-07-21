@@ -82,10 +82,18 @@ class HomeCampainFXController extends Controller
         }
     }
 
-    public function detail($id)
+    public function detail($id, Request $request)
     {
         try{
             $CampainFX_ID = CampainFX::findOrFail($id);
+            $referral_id = $request->query('sponserid');
+            if($referral_id){
+                // Store the referral ID in session
+                $request->session()->put('referral_id', $referral_id);
+                $request->session()->put('referral_expiry', now()->addDays(30));
+                // Store the referral ID in a cookie with a 30-day expiration
+                $cookie = cookie('referral_id', $referral_id, 60 * 24 * 30); // 30 days
+            }
             return view('home.campainDetail', compact(['CampainFX_ID']));
         }
         catch (e){

@@ -105,6 +105,9 @@
                 <p class="text-sm">Profit Percent
                   <b class="d-block">{{$CampainFX_ID->profirPercent ?? ''}}</b>
                 </p>
+                <p class="text-sm">Link Referal
+                  <b class="d-block"><a href = "https://tadaup.com/campainDetail/{{$CampainFX_ID->campainID}}?sponserid={{$customer->user_id}}">https://tadaup.com/campainDetail/{{$CampainFX_ID->campainID}}?sponserid={{$customer->user_id}}</a></b>
+                </p>
               </div>
               
               <div class="text-center mt-5 mb-3">
@@ -121,7 +124,7 @@
                   @if(auth()->check() && auth()->user()->hasLevel('0'))
                     <form action="{{ route('campainFX.done', $CampainFX_ID->campainID) }}" method="POST" style="display: inline;">
                     @csrf
-                      <button type="submit" class="btn btn-sm btn-warning" value="run" name="action" >Done</button>
+                      <button type="submit" class="btn btn-sm btn-warning" value="run" name="action" >Done1</button>
                     </form>
                   @endif
                 @endif

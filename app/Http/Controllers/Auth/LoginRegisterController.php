@@ -33,7 +33,23 @@ class LoginRegisterController extends Controller
      */
     public function register(Request $request)
     {
-        $sponserid = $request->query('sponserid');
+        // Check if referral ID is in session and not expired
+        $sponserid = $request->session()->get('referral_id');
+        $referralExpiry = $request->session()->get('referral_expiry');
+        if ($sponserid && $referralExpiry && now()->greaterThan($referralExpiry)) {
+            // Remove the referral ID if it has expired
+            $request->session()->forget('referral_id');
+            $request->session()->forget('referral_expiry');
+            $sponserid = null;
+        }
+        // If referral ID is not in session, check the cookie
+        else if (!$sponserid) {
+            $sponserid = $request->cookie('referral_id');
+            dd('$sponserid', $sponserid);
+            if(!$sponserid){
+                $sponserid = $request->query('sponserid');
+            }
+        }
         return view('auth.register', compact('sponserid'));
     }
 
