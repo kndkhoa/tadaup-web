@@ -53,6 +53,7 @@ Route::controller(TransactionController::class)->middleware('auth')->group(funct
     Route::put('/withdraw', 'withdraw')->name('withdraw');
     Route::get('/calculate-commission', 'calculateCommission')->name('calculate-commission')->middleware('level:0');
     Route::put('/calculate', 'calculate')->name('calculate')->middleware('level:0')->middleware('level:0');;
+    Route::put('/calculateCustom', 'calculateCustom')->name('calculateCustom')->middleware('level:0')->middleware('level:0');;
     Route::get('/approve-commission', 'approveCommission')->name('approve-commission')->middleware('level:0');
     Route::post('/transaction/{id}/approve', 'approve')->name('transaction.approve')->middleware('level:0');;
     Route::post('/transaction/{id}/reject', 'reject')->name('transaction.reject')->middleware('level:0');;

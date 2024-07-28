@@ -106,7 +106,7 @@
                   <b class="d-block">{{$CampainFX_ID->profirPercent ?? ''}}</b>
                 </p>
                 <p class="text-sm">Link Referal
-                  <b class="d-block"><a href = "https://tadaup.com/campainDetail/{{$CampainFX_ID->campainID}}?sponserid={{$customer->user_id}}">https://tadaup.com/campainDetail/{{$CampainFX_ID->campainID}}?sponserid={{$customer->user_id}}</a></b>
+                  <b class="d-block"><a href = "https://tadaup.com/campaign/{{$CampainFX_ID->campainID}}?sponserid={{$customer->user_id}}">https://tadaup.com/campaign/{{$CampainFX_ID->campainID}}?sponserid={{$customer->user_id}}</a></b>
                 </p>
               </div>
               

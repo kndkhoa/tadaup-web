@@ -17,7 +17,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Http;
-
+use App\Models\CampainFX;
 
 
 class TransactionController extends Controller
@@ -58,7 +58,8 @@ class TransactionController extends Controller
         $user_id = Auth::user()->user_id;
 
         $customers = Customer::getAll();
-        return view('transaction.calculatecommision', compact(['customers']));
+        $campaigns = CampainFX::getAll();
+        return view('transaction.calculatecommision', compact(['customers', 'campaigns']));
     }
 
      /**
@@ -106,7 +107,7 @@ class TransactionController extends Controller
             if (isset($collection['user_id'])) {
                 $userId = $collection['user_id'];
                 $amountCommission = $amount * $levels[$i];
-                Transaction::recordTransaction($userId, 'DEPOSIT', round($amountCommission, 2));
+                Transaction::recordTransaction($userId, 'DEPOSIT', round($amountCommission, 2), $request);
                 $i ++;
             } else {
                 // Handle the case where 'user_id' is not set
@@ -121,23 +122,7 @@ class TransactionController extends Controller
         }
     }
 
-    // public function calculateCommissions($amount, $levels = [0.50, 0.30, 0.10, 0.05, 0.05])
-    // {
-    //     $commissions = [];
-    //     $currentLevel = 0;
-    //     $this->recurseCommissions($commissions, $amount, $levels, $currentLevel);
-    //     return $commissions;
-    // }
-
-    // private function recurseCommissions(&$commissions, $amount, $levels, $currentLevel)
-    // {
-    //     if ($currentLevel < count($levels)) {
-    //         $commissions[$currentLevel] = $amount * $levels[$currentLevel];
-    //         foreach ($this->children as $child) {
-    //             $child->recurseCommissions($commissions, $amount, $levels, $currentLevel + 1);
-    //         }
-    //     }
-    // }
+    
 
     /////////////////////////////////////////////////Withdraw Commission//////////////////////////////////////////////
     /**
@@ -223,6 +208,63 @@ class TransactionController extends Controller
         catch (e){
             return redirect()->route('transaction-history')
             ->withErrors('You have fail reject commmission!');
+        }
+    }
+
+
+    ///////////Custom///////////////////////////////
+    public function calculateCustom(Request $request)
+    {
+        // Assuming you have the user's ID from authentication context
+        $user_id = $request->user_id_custom;
+        if(!$user_id){
+            return back()->withErrors(['user_id_custom' => 'Please select Fullname']);
+        }
+        // Get top-level customers for the user (those without a parent)
+        $customers = Customer::where('user_id', $user_id)
+                             ->get();
+        $user_sponser_id =  $customers[0]->user_sponser_id;
+        $collection = collect($customers);
+        $i = 1;
+        while ($i < 5){
+            
+            $customersParent = Customer::where('user_id', $user_sponser_id)
+                             ->get();
+            if($customersParent->isEmpty()){
+                break;
+            }
+            $user_sponser_id =  $customersParent[0]->user_sponser_id;
+            $collection->push($customersParent[0]);
+            $i++;
+        }
+        self::calComissionCustom($collection->all(),$request);
+        return redirect()->route('transaction-history')
+            ->with('success','You have successfully calculate commmission!');
+    }
+
+    public function calComissionCustom($collections, $request)
+    {
+        $amount = $request->campaign_value;
+        $levels = [0.50, 0.30, 0.10, 0.05, 0.05];
+        $i =0; 
+        $count = count($collections);
+        foreach ($collections as $collection) {
+            // Check if 'user_id' exists in the collection array
+            if (isset($collection['user_id'])) {
+                $userId = $collection['user_id'];
+                $amountCommission = $amount * $levels[$i];
+                Transaction::recordTransaction($userId, 'DEPOSIT', round($amountCommission, 2), $request);
+                $i ++;
+            } else {
+                // Handle the case where 'user_id' is not set
+                error_log('User ID not found in collection');
+                // Optionally, continue to the next iteration or implement additional error handling
+            }
+        }
+        while($i < 5){
+            $amountCommission = $amount * $levels[$i];
+            Transaction::recordTransaction(1, 'DEPOSIT', round($amountCommission, 2));
+            $i++;
         }
     }
     

@@ -28,13 +28,13 @@ class Transaction extends Authenticatable
         'updated_at'
     ];
 
-    public static function recordTransaction($user, $type, $amount)
+    public static function recordTransaction($user, $type, $amount, $request)
     {
         $lastTransaction = self::where('user_id', $user)->latest('id')->first();
         $lastBalance = $lastTransaction ? $lastTransaction->balance_after : 0;
 
         $newBalance = ($type === 'DEPOSIT') ? $lastBalance + $amount : $lastBalance - $amount;
-        $currency = 'USD';
+        $currency = $request->campaign_id ? $request->campaign_id : 'USD';
         return self::create([
             'user_id' => $user,
             'type' => $type,
