@@ -29,6 +29,7 @@ class CampainFX_Txn extends Authenticatable
         'transactionHash',
         'percent',
         'status',
+        'origPerson',
         'created_at',
         'updated_at'
     ];

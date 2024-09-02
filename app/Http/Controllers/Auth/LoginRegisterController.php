@@ -45,7 +45,6 @@ class LoginRegisterController extends Controller
         // If referral ID is not in session, check the cookie
         else if (!$sponserid) {
             $sponserid = $request->cookie('referral_id');
-            dd('$sponserid', $sponserid);
             if(!$sponserid){
                 $sponserid = $request->query('sponserid');
             }

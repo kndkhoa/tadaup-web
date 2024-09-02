@@ -9,7 +9,8 @@ use App\Http\Controllers\Campain\CampainFXController;
 use App\Http\Controllers\Campain\CampainFXTXNController;
 use App\Http\Controllers\Home\HomeCampainFXController;
 use App\Http\Controllers\UserManage\UserManageController;
-
+use App\Http\Controllers\DepositManage\DepositManageController;
+use App\Http\Controllers\WithdrawManage\WithdrawManageController;
 
 
 
@@ -96,4 +97,21 @@ Route::controller(HomeCampainFXController::class)->group(function() {
 Route::controller(UserManageController::class)->middleware('auth')->group(function() {
     Route::get('/cutomer-list', 'showCustomerList')->name('showCustomerList')->middleware('level:0');
     Route::get('/customer-detail/{id}', 'showCustomerDetail')->name('showCustomerDetail')->middleware('level:0');
+});
+
+//Deposit Management Controller
+Route::controller(DepositManageController::class)->middleware('auth')->group(function() {
+    Route::get('/campaignTransaction', 'showCampaignList')->name('showCampaignList')->middleware('level:0');
+    Route::match(['get', 'post'], '/campaignTransaction/{id}/detail', 'depositDetail')->name('depositDetail')->middleware('level:0');
+    Route::get('/depositHistory', 'showDepositHistory')->name('showDepositHistory')->middleware('level:0');
+    Route::post('/campaignTransaction/{id}/approve', 'depositApprove')->name('depositApprove')->middleware('level:0');  
+    Route::post('/campaignTransaction/{id}/reject', 'depositReject')->name('depositReject')->middleware('level:0');  
+});
+
+//Withdraw Management Controller
+Route::controller(WithdrawManageController::class)->middleware('auth')->group(function() {
+    Route::get('/withdrawTransaction', 'showWithDrawList')->name('showWithDrawList')->middleware('level:0');
+    Route::get('/withdrawHistory', 'showWithDrawHistory')->name('showWithDrawHistory')->middleware('level:0');
+    Route::post('/withdraw/{id}/approve', 'approve')->name('withdraw.approve')->middleware('level:0');;
+    Route::post('/withdraw/{id}/reject', 'reject')->name('withdraw.reject')->middleware('level:0');;
 });

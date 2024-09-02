@@ -24,11 +24,13 @@ class Transaction_Temp extends Authenticatable
         'type',
         'amount',
         'currency',
+        'eWallet',
         'bank_name',
         'bank_account',
         'bank_city',
         'fullname',
         'status',
+        'origPerson',
         'created_at',
         'updated_at'
     ];

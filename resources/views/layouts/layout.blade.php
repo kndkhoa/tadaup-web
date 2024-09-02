@@ -376,6 +376,56 @@
               </li>
             </ul>
           </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link">
+              <i class="nav-icon fas fa-table"></i>
+              <p>
+              Deposit Management
+                <i class="fas fa-angle-left right"></i>
+              </p>
+            </a>
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="{{ route('showCampaignList') }}" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Campaign Transaction</p>
+                </a>
+              </li>
+            </ul>
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="{{ route('showDepositHistory') }}" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Deposit History</p>
+                </a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link">
+              <i class="nav-icon fas fa-table"></i>
+              <p>
+              Withdraw Management
+                <i class="fas fa-angle-left right"></i>
+              </p>
+            </a>
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="{{ route('showWithDrawList') }}" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Withdraw Transaction</p>
+                </a>
+              </li>
+            </ul>
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="{{ route('showWithDrawHistory') }}" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Withdraw History</p>
+                </a>
+              </li>
+            </ul>
+          </li>
           @endif
 
 
