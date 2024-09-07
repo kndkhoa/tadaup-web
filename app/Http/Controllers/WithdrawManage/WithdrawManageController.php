@@ -41,7 +41,7 @@ class WithdrawManageController extends Controller
 
     public function showWithDrawHistory()
     {
-        $desired_status = ['APPR', 'REJ'];
+        $desired_status = ['DONE', 'REJ'];
         $type = 'WITHDRAW';
         $transactions_temp = Transaction_Temp::whereIn('status', $desired_status)
                             ->where('type', $type)
@@ -62,7 +62,7 @@ class WithdrawManageController extends Controller
                 return redirect()->back()->withErrors('Customer not found.');
             }
 
-            $desired_status = 'APPR';
+            $desired_status = 'DONE';
             
             // Debugging (this will stop execution, remove or comment out after debugging)
             // dd($customer['full_name']);
@@ -96,7 +96,7 @@ class WithdrawManageController extends Controller
             }
 
             $desired_status = 'REJ';
-            $transaction_temp_id = Transaction_Temp::findOrFail($id);
+            $transaction_temp = Transaction_Temp::findOrFail($id);
            
             // Update the transaction status and set the originating person
             $transaction_temp->update([
@@ -110,6 +110,19 @@ class WithdrawManageController extends Controller
             return redirect()->route('withdrawTransaction')
             ->withErrors('You have fail reject transaction!');
         }
+    }
+
+    public function showWithDrawForm()
+    {
+        $desired_status = ['DONE', 'REJ'];
+        $type = 'WITHDRAW';
+        $transactions_temp = Transaction_Temp::whereIn('status', $desired_status)
+                            ->where('type', $type)
+                            ->orderBy('created_at', 'desc') // Sort by creation date in descending order
+                            ->join('customers', 'Transactions_Temp.user_id', '=', 'customers.user_id')
+                            ->select('Transactions_Temp.*', 'customers.full_name as customer_name',) // Select relevant columns
+                            ->get();
+        return view('withdrawManage.withdrawhistory', compact(['transactions_temp']));
     }
 
 }

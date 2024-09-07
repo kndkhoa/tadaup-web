@@ -65,7 +65,7 @@ class DepositManageController extends Controller
                             ->select('CampainFX_TXN.*', 'customers.full_name as customer_name') 
                             ->get();
             $data = compact('CampainFX_ID','CampainFXTXN_ID');
-            return view('depositManage.depositmanage', $data);
+            return view('depositManage.depositdetail', $data);
         }
         catch (e){
             return redirect()->route('campaignTransaction')
@@ -73,10 +73,10 @@ class DepositManageController extends Controller
         }
     }
 
-    public function showDepositHistory()
+    public function showDepositDone()
     {
         try{
-            $desired_status = ['APPR', 'REJ'];
+            $desired_status = ['DONE'];
             $type = 'DEPOSIT';
             $CampainFXTXN = CampainFX_Txn::whereIn('CampainFX_TXN.status', $desired_status)
                                 ->where('CampainFX_TXN.txnType', $type)
@@ -85,14 +85,78 @@ class DepositManageController extends Controller
                                 ->join('campainFX', 'CampainFX_TXN.campainID', '=', 'campainFX.campainID')
                                 ->select('CampainFX_TXN.*', 'customers.full_name as customer_name', 'campainFX.campainName') // Select relevant columns
                                 ->get();
-            return view('depositManage.deposithistory', compact(['CampainFXTXN']));
+            return view('depositManage.depositdone', compact(['CampainFXTXN']));
 
         }
         catch (e){
             return redirect()->route('campaignTransaction')
-            ->withErrors('Get All Campaign Fail.' + e);
+            ->withErrors('Get All Transaction Fail.' + e);
         }
     }
+
+    public function showDepositProcess()
+    {
+        try{
+            $desired_status = ['PROCESS'];
+            $type = 'DEPOSIT';
+            $CampainFXTXN = CampainFX_Txn::whereIn('CampainFX_TXN.status', $desired_status)
+                                ->where('CampainFX_TXN.txnType', $type)
+                                ->orderBy('CampainFX_TXN.created_at', 'desc') // Sort by creation date in descending order
+                                ->join('customers', 'CampainFX_TXN.customerID', '=', 'customers.user_id')
+                                ->join('campainFX', 'CampainFX_TXN.campainID', '=', 'campainFX.campainID')
+                                ->select('CampainFX_TXN.*', 'customers.full_name as customer_name', 'campainFX.campainName') // Select relevant columns
+                                ->get();
+            return view('depositManage.depositprocess', compact(['CampainFXTXN']));
+
+        }
+        catch (e){
+            return redirect()->route('campaignTransaction')
+            ->withErrors('Get All Transaction Fail.' + e);
+        }
+    }
+
+    public function showDepositWin()
+    {
+        try{
+            $desired_status = ['WIN'];
+            $type = 'DEPOSIT';
+            $CampainFXTXN = CampainFX_Txn::whereIn('CampainFX_TXN.status', $desired_status)
+                                ->where('CampainFX_TXN.txnType', $type)
+                                ->orderBy('CampainFX_TXN.created_at', 'desc') // Sort by creation date in descending order
+                                ->join('customers', 'CampainFX_TXN.customerID', '=', 'customers.user_id')
+                                ->join('campainFX', 'CampainFX_TXN.campainID', '=', 'campainFX.campainID')
+                                ->select('CampainFX_TXN.*', 'customers.full_name as customer_name', 'campainFX.campainName') // Select relevant columns
+                                ->get();
+            return view('depositManage.depositwin', compact(['CampainFXTXN']));
+
+        }
+        catch (e){
+            return redirect()->route('campaignTransaction')
+            ->withErrors('Get All Transaction Fail.' + e);
+        }
+    }
+
+    public function showDepositReject()
+    {
+        try{
+            $desired_status = ['REJ'];
+            $type = 'DEPOSIT';
+            $CampainFXTXN = CampainFX_Txn::whereIn('CampainFX_TXN.status', $desired_status)
+                                ->where('CampainFX_TXN.txnType', $type)
+                                ->orderBy('CampainFX_TXN.created_at', 'desc') // Sort by creation date in descending order
+                                ->join('customers', 'CampainFX_TXN.customerID', '=', 'customers.user_id')
+                                ->join('campainFX', 'CampainFX_TXN.campainID', '=', 'campainFX.campainID')
+                                ->select('CampainFX_TXN.*', 'customers.full_name as customer_name', 'campainFX.campainName') // Select relevant columns
+                                ->get();
+            return view('depositManage.depositreject', compact(['CampainFXTXN']));
+
+        }
+        catch (e){
+            return redirect()->route('campaignTransaction')
+            ->withErrors('Get All Transaction Fail.' + e);
+        }
+    }
+
 
     public function depositApprove($id)
     {
@@ -103,7 +167,7 @@ class DepositManageController extends Controller
             $desired_status = $CampainFXTXN_ID->status ?? '';
             if($CampainFXTXN_ID->status == 'WAIT')
             {
-                $CampainFXTXN_ID->update(['status' => 'APPR',
+                $CampainFXTXN_ID->update(['status' => 'DONE',
                                         'origPerson' => $customer->full_name
                                         ]);
             }
@@ -130,6 +194,48 @@ class DepositManageController extends Controller
         catch (e){
             return redirect()->route('campainFXTXN.campain-transaction-detail')
             ->withErrors('Transaction reject fail.');
+        }
+    }
+
+    public function depositProcess($id)
+    {
+        try{
+            $user_id = Auth::user()->user_id;
+            $customer = Customer::find($user_id );
+            $CampainFXTXN_ID = CampainFX_Txn::findOrFail($id);
+            $desired_status = $CampainFXTXN_ID->status ?? '';
+            if($CampainFXTXN_ID->status == 'DONE')
+            {
+                $CampainFXTXN_ID->update(['status' => 'PROCESS',
+                                        'origPerson' => $customer->full_name
+                                        ]);
+            }
+             return redirect()->back()->with('success', 'Transaction process successfully.');
+        }
+        catch (e){
+            return redirect()->route('depositManage.campain-transaction-detail')
+            ->withErrors('Transaction process fail.');
+        }
+    }
+
+    public function depositWin($id)
+    {
+        try{
+            $user_id = Auth::user()->user_id;
+            $customer = Customer::find($user_id );
+            $CampainFXTXN_ID = CampainFX_Txn::findOrFail($id);
+            $desired_status = $CampainFXTXN_ID->status ?? '';
+            if($CampainFXTXN_ID->status == 'PROCESS')
+            {
+                $CampainFXTXN_ID->update(['status' => 'WIN',
+                                        'origPerson' => $customer->full_name
+                                        ]);
+            }
+             return redirect()->back()->with('success', 'Transaction win successfully.');
+        }
+        catch (e){
+            return redirect()->route('depositManage.campain-transaction-detail')
+            ->withErrors('Transaction win fail.');
         }
     }
 

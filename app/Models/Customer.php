@@ -30,6 +30,9 @@ class Customer extends Model
         'image_back_id',
         'bank_account',
         'bank_name',
+        'ewalletAddress',
+        'interestEwallet',
+        'ewalletNetwork',
         'user_sponser_id'
     ];
 

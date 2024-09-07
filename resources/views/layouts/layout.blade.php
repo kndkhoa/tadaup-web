@@ -394,9 +394,33 @@
             </ul>
             <ul class="nav nav-treeview">
               <li class="nav-item">
-                <a href="{{ route('showDepositHistory') }}" class="nav-link">
+                <a href="{{ route('showDepositDone') }}" class="nav-link">
                   <i class="far fa-circle nav-icon"></i>
-                  <p>Deposit History</p>
+                  <p>Deposit Done</p>
+                </a>
+              </li>
+            </ul>
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="{{ route('showDepositProcess') }}" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Deposit Process</p>
+                </a>
+              </li>
+            </ul>
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="{{ route('showDepositWin') }}" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Deposit Win</p>
+                </a>
+              </li>
+            </ul>
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="{{ route('showDepositReject') }}" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Deposit Reject</p>
                 </a>
               </li>
             </ul>

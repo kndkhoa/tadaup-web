@@ -38,10 +38,10 @@
               <thead>
                   <tr>
                       <th>
-                      Customer ID:
+                      Customer ID
                       </th>
                       <th>
-                          Fullname
+                        Customer Name
                       </th>
                       <th>
                           Phone
@@ -50,10 +50,13 @@
                           Address
                       </th>
                       <th>
+                          Email
+                      </th>
+                      <th>
                           Ewallet
                       </th>
                       <th>
-                          Chat History
+                          Detail
                       </th>
                   </tr>
               </thead>
@@ -73,12 +76,16 @@
                         {{$customer->address}}
                       </td>
                       <td>
+                        {{$customer->email}}
+                      </td>
+                      <td>
                         {{$customer->ewalletAddress}}
                       </td>
                       <td class="project-actions text-right">
-                          <form action="{{ route('campainFX.detail', $customer->customer_id) }}" method="POST" style="display: inline;">
-                              @csrf
-                              <input type="submit" value="View" class="btn btn-primary btn-sm">
+                                  <form action="{{ route('showCustomerDetail', $customer['customer_id']) }}" method="POST" style="display: inline;">
+                                      @csrf
+                                      <input type="submit" value="View" class="btn btn-primary btn-sm">
+                       </form>
                       </td>
                   </tr>
                   @endforeach

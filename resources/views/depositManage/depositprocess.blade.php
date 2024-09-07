@@ -8,12 +8,12 @@
       <div class="container-fluid">
         <div class="row mb-2">
           <div class="col-sm-6">
-            <h1>Deposit History</h1>
+            <h1>Deposit Process</h1>
           </div>
           <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
               <li class="breadcrumb-item"><a href="#">Home</a></li>
-              <li class="breadcrumb-item active">Deposit History</li>
+              <li class="breadcrumb-item active">Deposit Process</li>
             </ol>
           </div>
         </div>
@@ -45,7 +45,7 @@
                   <div class="row">
                     <div class="col-12">
                       <h4>
-                        <i class="fas fa-globe"></i> Deposit History
+                        <i class="fas fa-globe"></i> Deposit Process
                       </h4>
                     </div>
                     <!-- /.col -->
@@ -61,6 +61,7 @@
                       <th>Orig Person</th>
                       <th>Status</th>
                       <th>Create_At</th>
+                      <th>WIN</th>
                     </tr>
                     </thead>
                     <tbody>          
@@ -75,6 +76,16 @@
                       <td>{{$transaction_temp['origPerson']}}</td>
                       <td>{{$transaction_temp['status']}}</td>
                       <td>{{$transaction_temp['created_at']}}</td>
+                        
+                      <td>
+                          @if($transaction_temp->status == 'PROCESS')
+                          <form action="{{ route('depositWin', $transaction_temp->id) }}" method="POST" style="display: inline;">
+                            @csrf
+                            <input type="submit" value="WIN" class="btn btn-primary float-right" style="margin-right: 5px;">
+                          </form>
+                          @endif
+                        </td>
+                       
                     </tr>     
                     @endforeach
                     </tbody>
