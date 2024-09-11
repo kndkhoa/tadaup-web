@@ -57,12 +57,12 @@ class DepositManageController extends Controller
     {
         try{
             $CampainFX_ID = CampainFX::findOrFail($campainID);
-            $CampainFXTXN_ID = CampainFX_Txn::where('CampainFX_TXN.campainID', $campainID)
-                            ->where('CampainFX_TXN.txnType', 'DEPOSIT')
-                            ->where('CampainFX_TXN.status' , 'WAIT')
-                            ->orderBy('CampainFX_TXN.created_at', 'desc') // Sort by creation date in descending order
-                            ->join('customers', 'CampainFX_TXN.customerID', '=', 'customers.user_id')
-                            ->select('CampainFX_TXN.*', 'customers.full_name as customer_name') 
+            $CampainFXTXN_ID = CampainFX_TXN::where('campainFX_Txn.campainID', $campainID)
+                            ->where('campainFX_Txn.txnType', 'DEPOSIT')
+                            ->where('campainFX_Txn.status' , 'WAIT')
+                            ->orderBy('campainFX_Txn.created_at', 'desc') // Sort by creation date in descending order
+                            ->join('customers', 'campainFX_Txn.customerID', '=', 'customers.user_id')
+                            ->select('campainFX_Txn.*', 'customers.full_name as customer_name') 
                             ->get();
             $data = compact('CampainFX_ID','CampainFXTXN_ID');
             return view('depositManage.depositdetail', $data);
@@ -78,12 +78,12 @@ class DepositManageController extends Controller
         try{
             $desired_status = ['DONE'];
             $type = 'DEPOSIT';
-            $CampainFXTXN = CampainFX_Txn::whereIn('CampainFX_TXN.status', $desired_status)
-                                ->where('CampainFX_TXN.txnType', $type)
-                                ->orderBy('CampainFX_TXN.created_at', 'desc') // Sort by creation date in descending order
-                                ->join('customers', 'CampainFX_TXN.customerID', '=', 'customers.user_id')
-                                ->join('campainFX', 'CampainFX_TXN.campainID', '=', 'campainFX.campainID')
-                                ->select('CampainFX_TXN.*', 'customers.full_name as customer_name', 'campainFX.campainName') // Select relevant columns
+            $CampainFXTXN = CampainFX_TXN::whereIn('campainFX_Txn.status', $desired_status)
+                                ->where('campainFX_Txn.txnType', $type)
+                                ->orderBy('campainFX_Txn.created_at', 'desc') // Sort by creation date in descending order
+                                ->join('customers', 'campainFX_Txn.customerID', '=', 'customers.user_id')
+                                ->join('campainFX', 'campainFX_Txn.campainID', '=', 'campainFX.campainID')
+                                ->select('campainFX_Txn.*', 'customers.full_name as customer_name', 'campainFX.campainName') // Select relevant columns
                                 ->get();
             return view('depositManage.depositdone', compact(['CampainFXTXN']));
 
@@ -99,12 +99,12 @@ class DepositManageController extends Controller
         try{
             $desired_status = ['PROCESS'];
             $type = 'DEPOSIT';
-            $CampainFXTXN = CampainFX_Txn::whereIn('CampainFX_TXN.status', $desired_status)
-                                ->where('CampainFX_TXN.txnType', $type)
-                                ->orderBy('CampainFX_TXN.created_at', 'desc') // Sort by creation date in descending order
-                                ->join('customers', 'CampainFX_TXN.customerID', '=', 'customers.user_id')
-                                ->join('campainFX', 'CampainFX_TXN.campainID', '=', 'campainFX.campainID')
-                                ->select('CampainFX_TXN.*', 'customers.full_name as customer_name', 'campainFX.campainName') // Select relevant columns
+            $CampainFXTXN = CampainFX_TXN::whereIn('campainFX_Txn.status', $desired_status)
+                                ->where('campainFX_Txn.txnType', $type)
+                                ->orderBy('campainFX_Txn.created_at', 'desc') // Sort by creation date in descending order
+                                ->join('customers', 'campainFX_Txn.customerID', '=', 'customers.user_id')
+                                ->join('campainFX', 'campainFX_Txn.campainID', '=', 'campainFX.campainID')
+                                ->select('campainFX_Txn.*', 'customers.full_name as customer_name', 'campainFX.campainName') // Select relevant columns
                                 ->get();
             return view('depositManage.depositprocess', compact(['CampainFXTXN']));
 
@@ -120,12 +120,12 @@ class DepositManageController extends Controller
         try{
             $desired_status = ['WIN'];
             $type = 'DEPOSIT';
-            $CampainFXTXN = CampainFX_Txn::whereIn('CampainFX_TXN.status', $desired_status)
-                                ->where('CampainFX_TXN.txnType', $type)
-                                ->orderBy('CampainFX_TXN.created_at', 'desc') // Sort by creation date in descending order
-                                ->join('customers', 'CampainFX_TXN.customerID', '=', 'customers.user_id')
-                                ->join('campainFX', 'CampainFX_TXN.campainID', '=', 'campainFX.campainID')
-                                ->select('CampainFX_TXN.*', 'customers.full_name as customer_name', 'campainFX.campainName') // Select relevant columns
+            $CampainFXTXN = CampainFX_TXN::whereIn('campainFX_Txn.status', $desired_status)
+                                ->where('campainFX_Txn.txnType', $type)
+                                ->orderBy('campainFX_Txn.created_at', 'desc') // Sort by creation date in descending order
+                                ->join('customers', 'campainFX_Txn.customerID', '=', 'customers.user_id')
+                                ->join('campainFX', 'campainFX_Txn.campainID', '=', 'campainFX.campainID')
+                                ->select('campainFX_Txn.*', 'customers.full_name as customer_name', 'campainFX.campainName') // Select relevant columns
                                 ->get();
             return view('depositManage.depositwin', compact(['CampainFXTXN']));
 
@@ -141,12 +141,12 @@ class DepositManageController extends Controller
         try{
             $desired_status = ['REJ'];
             $type = 'DEPOSIT';
-            $CampainFXTXN = CampainFX_Txn::whereIn('CampainFX_TXN.status', $desired_status)
-                                ->where('CampainFX_TXN.txnType', $type)
-                                ->orderBy('CampainFX_TXN.created_at', 'desc') // Sort by creation date in descending order
-                                ->join('customers', 'CampainFX_TXN.customerID', '=', 'customers.user_id')
-                                ->join('campainFX', 'CampainFX_TXN.campainID', '=', 'campainFX.campainID')
-                                ->select('CampainFX_TXN.*', 'customers.full_name as customer_name', 'campainFX.campainName') // Select relevant columns
+            $CampainFXTXN = CampainFX_TXN::whereIn('campainFX_Txn.status', $desired_status)
+                                ->where('campainFX_Txn.txnType', $type)
+                                ->orderBy('campainFX_Txn.created_at', 'desc') // Sort by creation date in descending order
+                                ->join('customers', 'campainFX_Txn.customerID', '=', 'customers.user_id')
+                                ->join('campainFX', 'campainFX_Txn.campainID', '=', 'campainFX.campainID')
+                                ->select('campainFX_Txn.*', 'customers.full_name as customer_name', 'campainFX.campainName') // Select relevant columns
                                 ->get();
             return view('depositManage.depositreject', compact(['CampainFXTXN']));
 
@@ -162,8 +162,8 @@ class DepositManageController extends Controller
     {
         try{
             $user_id = Auth::user()->user_id;
-            $customer = Customer::find($user_id );
-            $CampainFXTXN_ID = CampainFX_Txn::findOrFail($id);
+            $customer = Customer::find($user_id);
+            $CampainFXTXN_ID = CampainFX_TXN::findOrFail($id);
             $desired_status = $CampainFXTXN_ID->status ?? '';
             if($CampainFXTXN_ID->status == 'WAIT')
             {
@@ -183,8 +183,8 @@ class DepositManageController extends Controller
     {
         try{
             $user_id = Auth::user()->user_id;
-            $customer = Customer::find($user_id );
-            $CampainFXTXN_ID = CampainFX_Txn::findOrFail($id);
+            $customer = Customer::find($user_id);
+            $CampainFXTXN_ID = CampainFX_TXN::findOrFail($id);
             $desired_status = $CampainFXTXN_ID->status ?? '';
             $CampainFXTXN_ID->update(['status' => 'REJ'
                                     ,'origPerson' => $customer->full_name
@@ -201,7 +201,7 @@ class DepositManageController extends Controller
     {
         try{
             $user_id = Auth::user()->user_id;
-            $customer = Customer::find($user_id );
+            $customer = Customer::find($user_id);
             $CampainFXTXN_ID = CampainFX_Txn::findOrFail($id);
             $desired_status = $CampainFXTXN_ID->status ?? '';
             if($CampainFXTXN_ID->status == 'DONE')
@@ -222,7 +222,7 @@ class DepositManageController extends Controller
     {
         try{
             $user_id = Auth::user()->user_id;
-            $customer = Customer::find($user_id );
+            $customer = Customer::find($user_id);
             $CampainFXTXN_ID = CampainFX_Txn::findOrFail($id);
             $desired_status = $CampainFXTXN_ID->status ?? '';
             if($CampainFXTXN_ID->status == 'PROCESS')

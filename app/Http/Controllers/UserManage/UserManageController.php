@@ -44,20 +44,42 @@ class UserManageController extends Controller
     public function showCustomerDetail($cutomerID)
     {
         try{
-            $customerByID = Customer::find($cutomerID );
+            $customerByID = Customer::find($cutomerID);
             $Customer_connection = Customer::where('customers.customer_id', $cutomerID)
                             ->join('cutomer_connection', 'customers.customer_id', '=', 'cutomer_connection.customer_id')
                             ->where('cutomer_connection.status', 'ACTIVE')
                             ->select('cutomer_connection.*', 'customers.full_name as customer_name', 'customers.phone as phone') 
                             ->get();
-            $data = compact('Customer_connection', 'customerByID');
+            
+            //Tree view
+            $userTree = Customer::with('children')->find($cutomerID);
+            if (!$userTree) {
+                return response()->json(['error' => 'User not found'], 404);
+            }
+            $tree = $this->buildTree($userTree);
+
+            $data = compact('Customer_connection', 'customerByID', 'tree');
             return view('usermanage.customer-detail', $data);
         }
         catch (e){
             return redirect()->route('showCustomerList')
             ->withErrors('Get All Campaign Fail.' + e);
         }
-        
+    }
+
+    private function buildTree($user)
+    {
+        $tree = [
+            'id' => $user->user_id,
+            'text' => $user->full_name,
+            'children' => []
+        ];
+
+        foreach ($user->children as $child) {
+            $tree['children'][] = $this->buildTree($child);
+        }
+
+        return $tree;
     }
 
     public function creatConnection(Request $request)

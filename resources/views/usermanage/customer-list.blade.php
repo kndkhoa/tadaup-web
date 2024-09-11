@@ -38,7 +38,7 @@
               <thead>
                   <tr>
                       <th>
-                      Customer ID
+                      ID
                       </th>
                       <th>
                         Customer Name
@@ -47,7 +47,7 @@
                           Phone
                       </th>
                       <th>
-                          Address
+                      Interest Ewallet
                       </th>
                       <th>
                           Email
@@ -57,6 +57,9 @@
                       </th>
                       <th>
                           Detail
+                      </th>
+                      <th>
+                          SponserID
                       </th>
                   </tr>
               </thead>
@@ -73,13 +76,16 @@
                         {{$customer->phone}}
                       </td>
                       <td>
-                        {{$customer->address}}
+                        {{$customer->interestEwallet}}
                       </td>
                       <td>
                         {{$customer->email}}
                       </td>
                       <td>
                         {{$customer->ewalletAddress}}
+                      </td>
+                      <td>
+                        {{$customer->user_sponser_id}}
                       </td>
                       <td class="project-actions text-right">
                                   <form action="{{ route('showCustomerDetail', $customer['customer_id']) }}" method="POST" style="display: inline;">

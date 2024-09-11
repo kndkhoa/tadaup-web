@@ -74,7 +74,7 @@
                 </div>
       @endif
 
-      <div class="row">
+        <div class="row">
           <div class="col-md-6">
             <div class="card card-primary">
               <div class="card-header">
@@ -148,6 +148,96 @@
             <!-- /.card -->
           </div>
         </div>
+
+        <div class="row">
+          <div class="col-md-6">
+            <div class="card card-secondary">
+              <div class="card-header">
+                <h3 class="card-title">CCCD Front</h3>
+
+                <div class="card-tools">
+                  <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
+                    <i class="fas fa-minus"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="card-body">
+              <div class="form-group  text-center">
+                  <img src="{{ asset('storage/' . $customerByID->image_font_id) }}"  width = '500px' height='350px'>
+                </div>
+              </div>
+              <!-- /.card-body -->
+            </div>
+            <!-- /.card -->
+          </div>
+          <div class="col-md-6">
+            <div class="card card-secondary">
+              <div class="card-header">
+                <h3 class="card-title">CCCD Back</h3>
+
+                <div class="card-tools">
+                  <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
+                    <i class="fas fa-minus"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="form-group  text-center">
+                  <img src="{{ asset('storage/' . $customerByID->image_back_id )}}" width = '500px' height='350px' >
+                </div>
+              </div>
+              <!-- /.card-body -->
+            </div>
+            <!-- /.card -->
+          </div>
+        </div>
+
+        <div class="col-12 table-responsive">
+                  <table class="table table-striped">
+                  <div class="row">
+                      <div class="col-12">
+                        <h4>
+                          <i class="fas fa-globe"></i>TreeView Member
+                        </h4>
+                      </div>
+                      <!-- /.col -->
+                  </div>
+                    <div id="tree-container" class="tree">
+                        <!-- Tree will be rendered here -->
+                    </div>
+              
+                  <script>
+                    var treeData = @json($tree);
+                    if (!Array.isArray(treeData)) {
+                        treeData = [treeData];
+                    }
+
+                    function createTreeView(data) {
+                      if (!Array.isArray(data)) {
+                        console.error("Data is not an array:", data);
+                        return '';
+                      }
+                      if(!data) return '';
+                      var html = '<ul>';
+                      data.forEach(function(item) {
+                        console.log("Processing item:", item);
+                          html += '<li>';
+                          html += '<a href="#">' + (item.text || 'No Text') + ' - ' + (item.id) + '</a>';
+                          if (item.children && item.children.length > 0) {
+                              html += createTreeView(item.children);
+                          }
+                          html += '</li>';
+                      });
+                      html += '</ul>';
+                      return html;
+                    }
+
+                    $(document).ready(function(){
+                        $('#tree-container').html(createTreeView(treeData));
+                    });
+                  </script>
+                  </table>
+          </div>
 
 
 

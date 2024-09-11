@@ -3,6 +3,9 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Home\HomeCampainFXAPIController;
+use App\Http\Controllers\API\DepositManageAPIController;
+use App\Http\Controllers\API\WithdrawManageAPIController;
+use App\Http\Controllers\API\UserManageAPIController;
 
 
 /*
@@ -28,4 +31,19 @@ Route::group(['prefix' => 'homecampainfx', 'as' => 'homecampainfx.'], function()
     Route::get('campainDetail/{id}', [HomeCampainFXAPIController::class, 'detail'])->name('campainDetail');
     Route::get('contact', [HomeCampainFXAPIController::class, 'contact'])->name('contact');
     Route::get('campainNew', [HomeCampainFXAPIController::class, 'new'])->name('campainNew');
+});
+
+Route::group(['prefix' => 'depositManage', 'as' => 'depositmanage.'], function() {
+    Route::post('/deposit', [DepositManageAPIController::class, 'createOrder'])->name('createOrder');
+    Route::post('/callback', [DepositManageAPIController::class, 'callbackDeposit'])->name('callbackDeposit');
+});
+
+Route::group(['prefix' => 'withdrawManage', 'as' => 'withdrawmanage.'], function() {
+    Route::post('/withdraw', [WithdrawManageAPIController::class, 'withdrawOrder'])->name('withdrawOrder');
+    Route::post('/callback', [WithdrawManageAPIController::class, 'callbackWithdraw'])->name('callbackWithdraw');
+});
+
+Route::group(['prefix' => 'usermanage', 'as' => 'usermanage.'], function() {
+    Route::post('/register', [UserManageAPIController::class, 'register'])->name('register');
+    Route::post('/customer-detail', [UserManageAPIController::class, 'showCustomerDetail'])->name('showCustomerDetail');
 });

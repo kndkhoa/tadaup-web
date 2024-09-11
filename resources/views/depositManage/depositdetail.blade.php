@@ -79,13 +79,13 @@
                     <tr>
                       <th>Customer ID</th>
                       <th>Customer Name</th>
-                      <th>Ewallet Customer ID</th>
-                      <th>Txn Type	</th>
+                      <th>Order Code</th>
+                      <th>Order Code Partner</th>
                       <th>Amount</th>
                       <th>Description</th>
                       <th>Status</th>
                       <th>Approve</th>
-                      <th>Reject</th>
+                      <th>Search</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -93,8 +93,8 @@
                     <tr>
                       <td>{{$campainFxTxn->customerID ?? ''}}</td>
                       <td>{{$campainFxTxn['customer_name']}}</td>
-                      <td>{{$campainFxTxn->ewalletCustomerID }}</td>
-                      <td>{{$campainFxTxn->txnType ?? ''}}</td>
+                      <td>{{$campainFxTxn->transactionHash ?? '' }}</td>
+                      <td>{{$campainFxTxn->transactionHashPartner ?? ''}}</td>
                       <td>{{$campainFxTxn->amount ?? ''}}</td>
                       <td>{{$campainFxTxn->txnDescription ?? ''}}</td>
                       <td>{{$campainFxTxn->status ?? ''}}</td>
@@ -108,7 +108,7 @@
                         <td>
                           <form action="{{ route('depositReject', $campainFxTxn->id) }}" method="POST" style="display: inline;">
                             @csrf
-                            <input type="submit" value="Reject" class="btn btn-primary float-right" style="margin-right: 5px;">
+                            <input type="submit" value="Search" class="btn btn-primary float-right" style="margin-right: 5px;">
                           </form>
                         </td>
                         @endif

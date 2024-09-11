@@ -33,8 +33,8 @@ class WithdrawManageController extends Controller
         $transactions_temp = Transaction_Temp::where('status', $desired_status)
                             ->where('type', $type)
                             ->orderBy('created_at', 'desc') // Sort by creation date in descending order
-                            ->join('customers', 'Transactions_Temp.user_id', '=', 'customers.user_id')
-                            ->select('Transactions_Temp.*', 'customers.full_name as customer_name',) // Select relevant columns
+                            ->join('customers', 'transactions_temp.user_id', '=', 'customers.user_id')
+                            ->select('transactions_temp.*', 'customers.full_name as customer_name',) // Select relevant columns
                             ->get();
         return view('withdrawManage.withdrawtransaction', compact(['transactions_temp']));
     }
@@ -46,8 +46,8 @@ class WithdrawManageController extends Controller
         $transactions_temp = Transaction_Temp::whereIn('status', $desired_status)
                             ->where('type', $type)
                             ->orderBy('created_at', 'desc') // Sort by creation date in descending order
-                            ->join('customers', 'Transactions_Temp.user_id', '=', 'customers.user_id')
-                            ->select('Transactions_Temp.*', 'customers.full_name as customer_name',) // Select relevant columns
+                            ->join('customers', 'transactions_temp.user_id', '=', 'customers.user_id')
+                            ->select('transactions_temp.*', 'customers.full_name as customer_name',) // Select relevant columns
                             ->get();
         return view('withdrawManage.withdrawhistory', compact(['transactions_temp']));
     }
@@ -112,17 +112,5 @@ class WithdrawManageController extends Controller
         }
     }
 
-    public function showWithDrawForm()
-    {
-        $desired_status = ['DONE', 'REJ'];
-        $type = 'WITHDRAW';
-        $transactions_temp = Transaction_Temp::whereIn('status', $desired_status)
-                            ->where('type', $type)
-                            ->orderBy('created_at', 'desc') // Sort by creation date in descending order
-                            ->join('customers', 'Transactions_Temp.user_id', '=', 'customers.user_id')
-                            ->select('Transactions_Temp.*', 'customers.full_name as customer_name',) // Select relevant columns
-                            ->get();
-        return view('withdrawManage.withdrawhistory', compact(['transactions_temp']));
-    }
 
 }

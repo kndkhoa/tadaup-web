@@ -59,6 +59,7 @@
                       <th>eWallet</th>
                       <th>Orig Person</th>
                       <th>Status</th>
+                      <th>Error Msg</th>
                       <th>Create_At</th>
                     </tr>
                     </thead>
@@ -72,6 +73,7 @@
                       <td>{{$transaction_temp['eWallet']}}</td>
                       <td>{{$transaction_temp['origPerson']}}</td>
                       <td>{{$transaction_temp['status']}}</td>
+                      <td>{{$transaction_temp['errorMsg']}}</td>
                       <td>{{$transaction_temp['created_at']}}</td>
                     </tr>     
                     @endforeach

@@ -156,7 +156,7 @@
                         $('#tree-container').html(createTreeView(treeData));
                     });
                   </script>
-                </table>
+                  </table>
                 </div>
               </div>
               <!-- /.row -->
