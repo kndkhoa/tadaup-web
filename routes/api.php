@@ -43,7 +43,11 @@ Route::group(['prefix' => 'withdrawManage', 'as' => 'withdrawmanage.'], function
     Route::post('/callback', [WithdrawManageAPIController::class, 'callbackWithdraw'])->name('callbackWithdraw');
 });
 
-Route::group(['prefix' => 'usermanage', 'as' => 'usermanage.'], function() {
+Route::group(['prefix' => 'usermanage', 'as' => 'usermanage.', 'middleware' => 'check.apikey'], function() {
     Route::post('/register', [UserManageAPIController::class, 'register'])->name('register');
+    Route::post('/login', [UserManageAPIController::class, 'login'])->name('login');
     Route::post('/customer-detail', [UserManageAPIController::class, 'showCustomerDetail'])->name('showCustomerDetail');
 });
+
+
+

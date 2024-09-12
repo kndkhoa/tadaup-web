@@ -24,6 +24,7 @@ class UserManageAPIController extends Controller
         try {
             // Validate incoming request data
             $validator = Validator::make($request->all(), [
+                'telegramid' => 'required|string|max:250',
                 'name' => 'required|string|max:250',
                 'email' => 'required|email|max:250|unique:users',
                 'password' => 'required|min:8',
@@ -47,9 +48,9 @@ class UserManageAPIController extends Controller
                 }
             }
 
-            $user = null;
             DB::transaction(function () use ($request) {
                 $user = User::create([
+                    'user_id' => $request->telegramid,
                     'username' => $request->name,
                     'email' => $request->email,
                     'password' => Hash::make($request->password),
@@ -60,8 +61,8 @@ class UserManageAPIController extends Controller
                     $path1 = $request->file('image_font')->store('dist/img/CCCD', 'public');
                     $path2 = $request->file('image_back')->store('dist/img/CCCD', 'public');
                     Customer::create([
-                        'customer_id' => $user->user_id,
-                        'user_id' => $user->user_id,
+                        'customer_id' => $request->telegramid,
+                        'user_id' => $request->telegramid,
                         'user_sponser_id' => $request->sponser_userid,
                         'full_name' => $request->fullname,
                         'phone' => $request->phone,
@@ -93,7 +94,45 @@ class UserManageAPIController extends Controller
         try {
             // Validate incoming request data
             $validator = Validator::make($request->all(), [
-                'customerID' => 'required|integer|max:250',
+                'customerID' => 'required|integer',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json(['errors' => $validator->errors()], 422);
+            }
+
+            //check exists user_sponser_id
+            if($request->customerID){
+                $customer = Customer::find($request->customerID);
+                if(!$customer)
+                {
+                    return response()->json(['error' => 'Customer ID not found.'], 400);
+                }
+
+                //Tree view
+                $userTree = Customer::with('children')->find($request->customerID);
+                if ($userTree) {
+                    $tree = $this->buildTree($userTree);
+
+                    return response()->json(['customer' => $customer, 'MLM'=> $tree, 'message' => 'Get user successfully!'], 201);
+                }
+                return response()->json(['customer' => $customer, 'MLM'=> [], 'message' => 'Get user successfully!'], 201);
+            }
+
+            
+        } catch (\Exception $e) {
+            Log::error('Get user failed: ' . $e->getMessage());
+            return response()->json(['error' => 'Get user failed.'], 500);
+        }
+    }
+
+    public function login(Request $request)
+    {
+        try {
+            // Validate incoming request data
+            $validator = Validator::make($request->all(), [
+                'email' => 'required|email|max:250',
+                'password' => 'required|min:8',
             ]);
 
             if ($validator->fails()) {
@@ -115,5 +154,20 @@ class UserManageAPIController extends Controller
             Log::error('Create user failed: ' . $e->getMessage());
             return response()->json(['error' => 'Create user failed.'], 500);
         }
+    }
+
+    private function buildTree($user)
+    {
+        $tree = [
+            'id' => $user->user_id,
+            'text' => $user->full_name,
+            'children' => []
+        ];
+
+        foreach ($user->children as $child) {
+            $tree['children'][] = $this->buildTree($child);
+        }
+
+        return $tree;
     }
 }

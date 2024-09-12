@@ -66,4 +66,8 @@ class Kernel extends HttpKernel
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'level' => \App\Http\Middleware\CheckUserLevel::class,
     ];
+
+    protected $routeMiddleware = [
+        'check.apikey' => \App\Http\Middleware\CheckApiKey::class,
+    ];
 }
