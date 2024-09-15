@@ -6,24 +6,27 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\CampainFX_Txn;
 use App\Models\Customer;
+use App\Models\CustomerItem;
+use App\Models\Transaction_Temp;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+
 
 
 class DepositManageAPIController extends Controller
 {
     
-    public function createOrder(Request $request)
+    public function deposit(Request $request)
     {
         try {
             // Validate incoming request data
             $validator = Validator::make($request->all(), [
-                'amount' => 'required|string|max:255',
-                'customer_id' => 'required|integer|min:1',
-                'campaign_id' => 'required|integer|min:1',
-                'ewallet_adress_campain' => 'required|string|max:500',
+                'amount' => 'required|numeric|min:0.01',
+                'customer_id' => 'required|string|min:1',
+                'ewallet' => 'required|string|max:500',
                 'description' => 'required|string|max:500',
             ]);
 
@@ -31,131 +34,118 @@ class DepositManageAPIController extends Controller
                 return response()->json(['errors' => $validator->errors()], 422);
             }
 
-            $order_code = 'ORD' . Str::uuid()->toString();
-            $customerByID = Customer::find($request->input('customer_id'));
-            // Create a new order
-            $campaign_txn = CampainFX_Txn::create([
-                'campainID' => $request->input('campaign_id'),
-                'customerID' => $request->input('customer_id'),
-                'ewalletAdressCampain' => $request->input('ewallet_adress_campain'),
-                'txnType' => 'DEPOSIT',
-                'amount' => $request->input('amount'),
-                'transactionHash' => $order_code,
-                'txnDescription' => $request->input('description'),
-                'status' => 'ORIG'
-            ]);
+            if ($request->ewallet == "1") {
+                // Create a new order code for deposit
+                $order_code = 'ORD' . Str::uuid()->toString();
 
-            $createOrder = self::callAPIPartnerVA($order_code, $customerByID->full_name, $request);
-            if($createOrder['code'] = 200){
-                $campaign_txn->update(['status' => 'WAIT'
-                                        ,'transactionHashPartner' => $createOrder['data']['system_order_code']
-                                        ,'paymentID' => $createOrder['data']['payment_id']
+                // Store transaction temporarily
+                Transaction_Temp::create([
+                    'user_id' => $request->customer_id,
+                    'type' => 'DEPOSIT',
+                    'amount' => $request->amount,
+                    'currency' => 'USD',
+                    'eWallet' => $request->ewallet,
+                    'transactionHash' => $order_code,
+                    'status' => 'WAIT',
                 ]);
-                // Return a success response with the created order
-                return response()->json(['order' => $createOrder, 'message' => 'Order created successfully!'], 201);
+
+                return response()->json(['order' => $order_code, 'message' => 'Deposit wallet successfully!'], 201);
             }
 
-            return response()->json(['error' => 'Create Order Deposit failed.'], 500);
+            if ($request->ewallet == "2") {
+                // Transaction for withdrawal
+                $order_code = 'ORD' . Str::uuid()->toString();
+                $transaction_Temp = Transaction_Temp::create([
+                    'user_id' => $request->customer_id,
+                    'type' => 'WITHDRAW',
+                    'amount' => $request->amount,
+                    'currency' => 'USD',
+                    'eWallet' => '1',
+                    'transactionHash' => $order_code,
+                    'status' => 'DONE',
+                ]);
 
+                DB::transaction(function () use ($request) {
+                    // Retrieve and update customer item for type = 1
+                    $customerItemType1 = CustomerItem::where('customer_id', $request->customer_id)
+                        ->where('type', 1)
+                        ->firstOrFail();  // Throws exception if not found
+
+                    if ((int)$customerItemType1->value < (int)$request->amount) {
+                        throw new \Exception("Insufficient funds.");
+                    }
+
+                    // Decrement the value for type = 1
+                    $customerItemType1->update([
+                        'value' => (int) $customerItemType1->value - (int) $request->amount
+                    ]);
+
+                    // Retrieve and update customer item for type = 2
+                    $customerItemType2 = CustomerItem::where('customer_id', $request->customer_id)
+                        ->where('type', 2)
+                        ->firstOrFail();  // Throws exception if not found
+
+                    // Increment the value for type = 2
+                    $customerItemType2->update([
+                        'value' => (int) $customerItemType2->value + (int) $request->amount
+                    ]);
+                });
+
+                // Create a new campaign transaction
+                CampainFX_Txn::create([
+                    'campainID' => $request->campainID,
+                    'customerID' => $request->customer_id,
+                    'ewalletCustomerID' => $request->ewallet,
+                    'txnType' => 'DEPOSIT',
+                    'amount' => $request->amount,
+                    'txnDescription' => $request->description,
+                    'transactionHash' => $order_code,
+                    'status' => 'WAIT'
+                ]);
+
+                return response()->json(['message' => 'Register Fund successfully!'], 201);
+            }
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            // Handle model not found exception (like firstOrFail)
+            Log::error('Deposit wallet failed: ' . $e->getMessage());
+            return response()->json(['error' => 'Record not found.'], 404);
         } catch (\Exception $e) {
-            Log::error('Create Order Deposit failed: ' . $e->getMessage());
-            return response()->json(['error' => 'Create Order Deposit failed.'], 500);
+            // Log any other exception
+            Log::error('Deposit wallet failed: ' . $e->getMessage());
+            return response()->json(['error' => 'Deposit wallet failed.'], 500);
         }
     }
 
     public function callbackDeposit(Request $request)
     {
         try {
-            $CampainFXTXN = CampainFX_Txn::where('transactionHashPartner', $request->input('system_order_code'))
-                                        ->where('transactionHash', $request->input('partner_order_code'))
-                                        ->where('paymentID', $request->input('payment.payment_id'))
-                                        ->first();  // Use first() to get a single record
-    
-            $status = $request->input('payment.status');
-        
-            if ($status == "4" && $CampainFXTXN) {
-                // Update the record if it exists
-                $CampainFXTXN->update(['status' => 'DONE']);
-                return response()->json(['message' => 'Callback successfully!'], 201);
-            } else {
-                return response()->json(['error' => 'Transaction not found or invalid status'], 404);
-            }
+            DB::transaction(function () use ($request) {
+                // Retrieve the temporary transaction record
+                $transaction_Temp = Transaction_Temp::where('transactionHash', $request->transactionHash)
+                                                    ->where('user_id', $request->customer_id)
+                                                    ->firstOrFail();  // Use firstOrFail to automatically throw exception if not found
 
+                // Check if the status is 'WAIT' and the input status is 'DONE'
+                if ($transaction_Temp->status === 'WAIT' && $request->input('status') === 'DONE') {
+                    // Update the status of the transaction
+                    $transaction_Temp->update(['status' => 'DONE']);
+
+                    // Increment the value for the customer item with type = 1
+                    CustomerItem::where('customer_id', $request->customer_id)
+                                ->where('type', 1)
+                                ->increment('value', (int) $transaction_Temp->amount);
+                }
+            });
+
+            return response()->json(['message' => 'Callback successfully!'], 201);
+            
         } catch (\Exception $e) {
+            // Log the exception and return error response
             Log::error('Callback failed: ' . $e->getMessage());
             return response()->json(['error' => 'Callback failed.'], 500);
         }
     }
 
-    public function callAPIPartnerVA ($order_code, $name, $request)
-    {
-        // Define required parameters
-        $partner_id = 'your_partner_id'; // Replace with your partner ID
-        $timestamp = Carbon::now()->timestamp; // Current timestamp
-        $random = Str::random(10); // Generate a random string
-        $partner_order_code = $order_code; // Unique transaction ID
-        $amount = $request->input('amount'); // Amount of the payment
-        $customer_name = $name; // Example customer name
-        $payee_name = ''; // Leave empty if not required
-        $notify_url = 'https://yourdomain.com/notify'; // Notification URL
-        $return_url = 'https://yourdomain.com/return'; // Return URL after transaction
-        $extra_data = ''; // Additional data if required
-        $partner_secret = 'your_partner_secret'; // Replace with your partner secret
-
-        // Generate signature
-        $signature_string = implode(':', [
-            $partner_id,
-            $timestamp,
-            $random,
-            $partner_order_code,
-            $amount,
-            $customer_name,
-            $payee_name,
-            $notify_url,
-            $return_url,
-            $extra_data,
-            $partner_secret
-        ]);
-
-        $sign = md5($signature_string);
-
-        // Prepare data for the request
-        $data = [
-            'partner_id' => $partner_id,
-            'timestamp' => $timestamp,
-            'random' => $random,
-            'partner_order_code' => $partner_order_code,
-            'amount' => $amount,
-            'customer_name' => $customer_name,
-            'payee_name' => $payee_name,
-            'notify_url' => $notify_url,
-            'return_url' => $return_url,
-            'extra_data' => $extra_data,
-            'sign' => $sign,
-        ];
-
-        // Call the API using HTTP POST
-        try {
-            //$response = Http::post('https://example.com/gateway/bnb/createVA.do', $data);
-            $response = '{
-                "code":200, "msg":"success", "data":{
-                "partner_id":"10081", "system_order_code":"VA2021112123425295326442X8G", "partner_order_code":"2021112123425178828", "amount":4000000000,
-                                  
-                "request_time":1637512972, "bank_account":{
-                "bank_code":"VCCB", "bank_name":"VIETCAPITALBANK", "bank_account_no":"99900030002819", "bank_account_name":"AP DTD"
-                },
-                "payment_id":"361930bd-86bb-4ac7-adbb-023d6ef22137", "payment_url":"https://vi.long77.net/gateway/pay/paymentBnBVA.do?id=VA2021112123425295326442X8G"
-                } }';
-
-            // Log response for debugging purposes
-            $responseArray = json_decode($response, true);
-            Log::info('API Response:', ['response' =>  $responseArray]);
-
-            // Return the response or handle it accordingly
-            return  $responseArray;
-        } catch (\Exception $e) {
-            Log::error('API Call Failed:', ['error' => $e->getMessage()]);
-            return ['error' => $e->getMessage()];
-        }
-    }
+    
 }

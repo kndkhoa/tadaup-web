@@ -34,7 +34,7 @@ Route::group(['prefix' => 'homecampainfx', 'as' => 'homecampainfx.'], function()
 });
 
 Route::group(['prefix' => 'depositManage', 'as' => 'depositmanage.'], function() {
-    Route::post('/deposit', [DepositManageAPIController::class, 'createOrder'])->name('createOrder');
+    Route::post('/deposit', [DepositManageAPIController::class, 'deposit'])->name('deposit');
     Route::post('/callback', [DepositManageAPIController::class, 'callbackDeposit'])->name('callbackDeposit');
 });
 
@@ -47,7 +47,11 @@ Route::group(['prefix' => 'usermanage', 'as' => 'usermanage.', 'middleware' => '
     Route::post('/register', [UserManageAPIController::class, 'register'])->name('register');
     Route::post('/login', [UserManageAPIController::class, 'login'])->name('login');
     Route::post('/customer-detail', [UserManageAPIController::class, 'showCustomerDetail'])->name('showCustomerDetail');
+    Route::post('/check-user', [UserManageAPIController::class, 'checkUserID'])->name('checkUserID');
+    Route::get('/campaign', [UserManageAPIController::class, 'getAllCampaign'])->name('getAllCampaign');
 });
+
+
 
 
 
