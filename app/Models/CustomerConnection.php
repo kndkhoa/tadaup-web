@@ -20,6 +20,7 @@ class CustomerConnection extends Authenticatable
     protected $table = 'cutomer_connection';
     protected $fillable = [
         'customer_id',
+        'transactionHash',
         'link_url',
         'user_name',
         'password',
@@ -44,6 +45,7 @@ class CustomerConnection extends Authenticatable
             'user_name' => $request->username,
             'password' => $request->password,
             'type' => $request->type,
+            'transactionHash' => $request->txnhash,
             'status' => 'ACTIVE'
         ]);
     }

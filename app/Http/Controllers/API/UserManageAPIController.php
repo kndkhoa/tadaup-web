@@ -160,21 +160,33 @@ class UserManageAPIController extends Controller
                                     ->where('campainFX_Txn.txnType', 'DEPOSIT')
                                     ->orderBy('campainFX_Txn.created_at', 'desc') // Sort by creation date in descending order
                                     ->join('campainFX', 'campainFX_Txn.campainID', '=', 'campainFX.campainID')
-                                    ->select('campainFX_Txn.id', 'campainFX.campainName', 'campainFX_Txn.txnType', 'campainFX_Txn.amount', 'campainFX_Txn.status') 
+                                    ->leftJoin('cutomer_connection', 'campainFX_Txn.transactionHash', '=', 'cutomer_connection.transactionHash') // Join on transactionHash
+                                    ->select(
+                                        'campainFX_Txn.id',
+                                        'campainFX.campainName',
+                                        'campainFX_Txn.txnType',
+                                        'campainFX_Txn.amount',
+                                        'campainFX_Txn.status',
+                                        'cutomer_connection.link_url as link_url',  // Include customer_connection data
+                                        'cutomer_connection.user_name as user_name',  // Check if a connection exists
+                                        'cutomer_connection.password as password',
+                                        'cutomer_connection.created_at as created_at'
+                                    )
                                     ->get();
 
                 //Customer Connection
-                $customerConnection = CustomerConnection::where('cutomer_connection.customer_id', $request->customerID)
-                                                    ->where('cutomer_connection.type', 'MT4')
-                                                    ->where('cutomer_connection.status', 'ACTIVE')
-                                                    ->get();
+                // $customerConnection = CustomerConnection::where('cutomer_connection.customer_id', $request->customerID)
+                //                                     ->where('cutomer_connection.transactionHash', $request->customerID)
+                //                                     ->where('cutomer_connection.type', 'MT4')
+                //                                     ->where('cutomer_connection.status', 'ACTIVE')
+                //                                     ->get();
 
                 return response()->json([
                                         'customer' => $customer, 
                                         'assetment' => $customerItem,
                                         'MLM'=> $tree, 
                                         'campaign'=> $CampainFXTXN_ID,
-                                        'MT4' => $customerConnection,
+                                        //'MT4' => $customerConnection,
                                         'message' => 'Get user successfully!'], 201);
             }
 

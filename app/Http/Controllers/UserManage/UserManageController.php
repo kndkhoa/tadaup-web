@@ -5,6 +5,7 @@ namespace App\Http\Controllers\UserManage;
 use App\Models\Customer;
 use App\Models\User;
 use App\Models\CustomerConnection;
+use App\Models\CampainFX_Txn;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -12,6 +13,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
 
 
 class UserManageController extends Controller
@@ -45,12 +47,18 @@ class UserManageController extends Controller
     {
         try{
             $customerByID = Customer::find($cutomerID);
+
             $Customer_connection = Customer::where('customers.customer_id', $cutomerID)
                             ->join('cutomer_connection', 'customers.customer_id', '=', 'cutomer_connection.customer_id')
                             ->where('cutomer_connection.status', 'ACTIVE')
                             ->select('cutomer_connection.*', 'customers.full_name as customer_name', 'customers.phone as phone') 
                             ->get();
-            
+
+            $campainFX_Txns = CampainFX_Txn::where('customerID', $cutomerID)
+                            ->where('status', 'WAIT')
+                            ->where('txnType', 'DEPOSIT')
+                            ->whereNotNull('transactionHash')
+                            ->get();
             //Tree view
             $userTree = Customer::with('children')->find($cutomerID);
             if (!$userTree) {
@@ -58,7 +66,7 @@ class UserManageController extends Controller
             }
             $tree = $this->buildTree($userTree);
 
-            $data = compact('Customer_connection', 'customerByID', 'tree');
+            $data = compact('Customer_connection', 'customerByID', 'tree', 'campainFX_Txns');
             return view('usermanage.customer-detail', $data);
         }
         catch (e){
@@ -85,8 +93,20 @@ class UserManageController extends Controller
     public function creatConnection(Request $request)
     {
         try{
-            CustomerConnection::addRecord($request);
+            DB::transaction(function () use ($request) {
+                CustomerConnection::addRecord($request);
 
+                $campainFXTXN_ID = CampainFX_Txn::where('customerID', $request->customerid)
+                                ->where('txnType', 'DEPOSIT')
+                                ->where('transactionHash', $request->txnhash)
+                                ->first();
+                $desired_status = $campainFXTXN_ID->status ?? '';
+                if($campainFXTXN_ID->status == 'WAIT')
+                {
+                    $campainFXTXN_ID->update(['status' => 'PROCESS'
+                                            ]);
+                }
+            });
             return redirect()->route('showCustomerDetail', $request->customerid)
                 ->withSuccess('Add connection successfully.');
         }

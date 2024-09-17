@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\CampainFX_Txn;
+use App\Models\CampainFX;
 use App\Models\Customer;
 use App\Models\CustomerItem;
 use App\Models\Transaction_Temp;
@@ -24,7 +25,7 @@ class DepositManageAPIController extends Controller
         try {
             // Validate incoming request data
             $validator = Validator::make($request->all(), [
-                'amount' => 'required|numeric|min:0.01',
+                //'amount' => 'required|numeric|min:0.01',
                 'customer_id' => 'required|string|min:1',
                 'ewallet' => 'required|string|max:500',
                 'description' => 'required|string|max:500',
@@ -34,6 +35,7 @@ class DepositManageAPIController extends Controller
                 return response()->json(['errors' => $validator->errors()], 422);
             }
 
+            //Nap tien vi usdt 
             if ($request->ewallet == "1") {
                 // Create a new order code for deposit
                 $order_code = 'ORD' . Str::uuid()->toString();
@@ -52,32 +54,59 @@ class DepositManageAPIController extends Controller
                 return response()->json(['order' => $order_code, 'message' => 'Deposit wallet successfully!'], 201);
             }
 
+            //Token
+            if ($request->ewallet == "3") {
+                // Create a new order code for deposit
+                $order_code = 'ORD' . Str::uuid()->toString();
+
+                // Store transaction temporarily
+                Transaction_Temp::create([
+                    'user_id' => $request->customer_id,
+                    'type' => 'DEPOSIT',
+                    'amount' => $request->amount,
+                    'currency' => 'TDU',
+                    'eWallet' => '3',
+                    'transactionHash' => $order_code,
+                    'status' => 'DONE',
+                ]);
+
+                // Increment the value for the customer item with type = 1
+                CustomerItem::where('customer_id', $request->customer_id)
+                                ->where('type', 3)
+                                ->increment('value', (double) $request->amount);
+
+                return response()->json(['order' => $order_code, 'message' => 'Deposit wallet token successfully!'], 201);
+            }
+
+            //Dang ky thi quy
             if ($request->ewallet == "2") {
                 // Transaction for withdrawal
                 $order_code = 'ORD' . Str::uuid()->toString();
+                $campainFX = CampainFX::where('campainID', $request->campainID)
+                                        ->firstOrFail();  // Throws exception if not found                  
                 $transaction_Temp = Transaction_Temp::create([
                     'user_id' => $request->customer_id,
                     'type' => 'WITHDRAW',
-                    'amount' => $request->amount,
+                    'amount' => $campainFX->campain_amount,
                     'currency' => 'USD',
                     'eWallet' => '1',
                     'transactionHash' => $order_code,
                     'status' => 'DONE',
                 ]);
-
-                DB::transaction(function () use ($request) {
+               // dd($campainFX->campain_amount);
+                DB::transaction(function () use ($request, $campainFX) {
                     // Retrieve and update customer item for type = 1
                     $customerItemType1 = CustomerItem::where('customer_id', $request->customer_id)
                         ->where('type', 1)
                         ->firstOrFail();  // Throws exception if not found
 
-                    if ((int)$customerItemType1->value < (int)$request->amount) {
+                    if ((int)$customerItemType1->value < (int)$campainFX->campain_amount) {
                         throw new \Exception("Insufficient funds.");
                     }
 
                     // Decrement the value for type = 1
                     $customerItemType1->update([
-                        'value' => (int) $customerItemType1->value - (int) $request->amount
+                        'value' => (int) $customerItemType1->value - (int) $campainFX->campain_amount
                     ]);
 
                     // Retrieve and update customer item for type = 2
@@ -87,7 +116,7 @@ class DepositManageAPIController extends Controller
 
                     // Increment the value for type = 2
                     $customerItemType2->update([
-                        'value' => (int) $customerItemType2->value + (int) $request->amount
+                        'value' => (int) $customerItemType2->value + (int) $campainFX->campain_amount
                     ]);
                 });
 
@@ -97,7 +126,7 @@ class DepositManageAPIController extends Controller
                     'customerID' => $request->customer_id,
                     'ewalletCustomerID' => $request->ewallet,
                     'txnType' => 'DEPOSIT',
-                    'amount' => $request->amount,
+                    'amount' => $campainFX->campain_amount,
                     'txnDescription' => $request->description,
                     'transactionHash' => $order_code,
                     'status' => 'WAIT'

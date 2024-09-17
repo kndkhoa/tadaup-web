@@ -44,6 +44,8 @@
                         <li class="small"><span class="fa-li"><i class="fas fa-lg fa-building"></i></span> <b>Username:</b> {{$cutomer->user_name ?? ''}}</li>
                         </br>
                         <li class="small"><span class="fa-li"><i class="fas fa-lg fa-building"></i></span> <b>Password:</b> {{$cutomer->password ?? ''}}</li>
+                        </br>
+                        <li class="small"><span class="fa-li"><i class="fas fa-lg fa-building"></i></span> <b>Order:</b> {{$cutomer->transactionHash ?? ''}}</li>
                       </ul>
                     </div>
                     <!-- <div class="col-5 text-center">
@@ -104,6 +106,15 @@
                     <option value="FUND">FUND</option>
                     <option value="MT4">MT4</option>
                     <option value="VPS">VPS</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="inputEstimatedDuration">Transaction Hash</label><br/>
+                  <select id="bankList" name="txnhash">
+                    <option value="">Select Order</option>
+                    @foreach($campainFX_Txns as $campainFX_Txn)
+                      <option value="{{$campainFX_Txn['transactionHash']}}">{{$campainFX_Txn['transactionHash']}}</option>
+                    @endforeach
                   </select>
                 </div>
                 <div class="form-group">
