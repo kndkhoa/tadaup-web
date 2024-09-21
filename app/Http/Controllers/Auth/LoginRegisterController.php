@@ -167,28 +167,41 @@ class LoginRegisterController extends Controller
                 $user_id = Auth::user()->user_id;
                 $customer = Customer::find($user_id );
                 $desired_status = 'RUN';
+                // $listCampain = DB::table('campainFX')
+                //             ->where('campainFX.status', $desired_status)
+                //             ->leftJoin('campainFX_Txn', 'campainFX.campainID', '=', 'campainFX_Txn.campainID')
+                //             ->where('campainFX_Txn.customerID', $user_id)
+                //             ->select(
+                //                 'campainFX.campainID',
+                //                 'campainFX.campainName',
+                //                 'campainFX.created_at',
+                //                 'campainFX.campainDescription',
+                //                 'campainFX.status',
+                //                 'campainFX.content' // Include all columns used in SELECT
+                //             )
+                //             ->groupBy(
+                //                 'campainFX.campainID',
+                //                 'campainFX.campainName',
+                //                 'campainFX.created_at',
+                //                 'campainFX.campainDescription',
+                //                 'campainFX.status',
+                //                 'campainFX.content' 
+                //             )
+                //             ->orderBy('campainFX.created_at', 'desc')
+                //             ->get();
+                
                 $listCampain = DB::table('campainFX')
-                            ->where('campainFX.status', $desired_status)
-                            ->leftJoin('campainFX_Txn', 'campainFX.campainID', '=', 'campainFX_Txn.campainID')
-                            ->where('campainFX_Txn.customerID', $user_id)
-                            ->select(
-                                'campainFX.campainID',
-                                'campainFX.campainName',
-                                'campainFX.created_at',
-                                'campainFX.campainDescription',
-                                'campainFX.status',
-                                'campainFX.content' // Include all columns used in SELECT
-                            )
-                            ->groupBy(
-                                'campainFX.campainID',
-                                'campainFX.campainName',
-                                'campainFX.created_at',
-                                'campainFX.campainDescription',
-                                'campainFX.status',
-                                'campainFX.content' 
-                            )
-                            ->orderBy('campainFX.created_at', 'desc')
-                            ->get();
+                                ->where('campainFX.status', $desired_status)
+                                ->select(
+                                    'campainFX.campainID',
+                                    'campainFX.campainName',
+                                    'campainFX.created_at',
+                                    'campainFX.campainDescription',
+                                    'campainFX.status',
+                                    'campainFX.content' // Include all columns used in SELECT
+                                )
+                                ->orderBy('campainFX.created_at', 'desc')
+                                ->get();
                 return view('layouts.dashboard', compact(['listCampain']));
             }
             return redirect()->route('login')

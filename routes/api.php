@@ -49,6 +49,7 @@ Route::group(['prefix' => 'usermanage', 'as' => 'usermanage.', 'middleware' => '
     Route::post('/customer-detail', [UserManageAPIController::class, 'showCustomerDetail'])->name('showCustomerDetail');
     Route::post('/check-user', [UserManageAPIController::class, 'checkUserID'])->name('checkUserID');
     Route::get('/campaign', [UserManageAPIController::class, 'getAllCampaign'])->name('getAllCampaign');
+    Route::post('/calculate-point', [UserManageAPIController::class, 'calculatePoint'])->name('calculatePoint');
 });
 
 
