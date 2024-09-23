@@ -59,7 +59,7 @@ class UserManageAPIController extends Controller
                 $user = User::create([
                     'user_id' => $request->telegramid,
                     'username' => $request->name ?? '',
-                    'email' => $request->email ?? '',
+                    'email' => $request->email ?? null,
                     'password' => Hash::make('12345678'),
                     'level' => 1,
                     'status' => 'ACT'
@@ -67,8 +67,15 @@ class UserManageAPIController extends Controller
                 try {
 
                     //Create customer table
-                    $path1 = $request->file('image_font')->store('dist/img/CCCD', 'public');
-                    $path2 = $request->file('image_back')->store('dist/img/CCCD', 'public');
+                    $path1 = '';
+                    $path2 = '';
+                    if ($request->hasFile('image_font') && $request->file('image_font')->isValid()) {
+                        $path1 = $request->file('image_font')->store('dist/img/CCCD', 'public');
+                    }
+                    if ($request->hasFile('image_back') && $request->file('image_back')->isValid()) {
+                        $path2 = $request->file('image_back')->store('dist/img/CCCD', 'public');
+                    }
+                    
                     Customer::create([
                         'customer_id' => $request->telegramid,
                         'user_id' => $request->telegramid,
@@ -120,13 +127,78 @@ class UserManageAPIController extends Controller
                     CustomerItem::create($item);
                 }
             });
-            $credentials = $request->only('email', 'password');
-            Auth::attempt($credentials);
+            // $credentials = $request->only('email', 'password');
+            // Auth::attempt($credentials);
 
-            return response()->json(['user' => $request->email, 'message' => 'Create user successfully!'], 201);
+            return response()->json(['user' => $request->telegramid, 'message' => 'Create user successfully!'], 201);
         } catch (\Exception $e) {
             Log::error('Create user failed: ' . $e->getMessage());
             return response()->json(['error' => 'Create user failed.'], 500);
+        }
+    }
+
+    public function updateProfile(Request $request)
+    {
+        try{
+            $validator = Validator::make($request->all(), [
+                'telegramid' => 'required|string',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json(['errors' => $validator->errors()], 422);
+            }
+
+            //Image
+            $path1 = '';
+            $path2 = '';
+            if ($request->hasFile('image_font') && $request->file('image_font')->isValid()) {
+                $path1 = $request->file('image_font')->store('dist/img/CCCD', 'public');
+            }
+            if ($request->hasFile('image_back') && $request->file('image_back')->isValid()) {
+                $path2 = $request->file('image_back')->store('dist/img/CCCD', 'public');
+            }
+
+            //Update customer
+            $customer = Customer::find($request->telegramid);
+            Customer::upsert(
+                [
+                    'user_id' => $request->telegramid,
+                    'customer_id' => $request->telegramid,
+                    'role_id' => 1,
+                    'full_name' => $request->name ?? $customer->full_name ?? null,
+                    'phone' => $request->phone ?? $customer->phone ?? null,
+                    'address' => $request->address ?? $customer->address ?? null,
+                    'image_font_id' => $path1 ?? $customer->image_font_id ?? null,
+                    'image_back_id' => $path2 ?? $customer->image_back_id ?? null,
+                    'bank_account' => $request->bank_account ?? $customer->bank_account ?? null,
+                    'bank_name' => $request->bank_name ?? $customer->bank_name ?? null,
+                    'ewalletAddress' => $request->ewalletAddress ?? $customer->ewalletAddress ?? null,
+                    'user_sponser_id' => $request->sponser_userid ?? $customer->user_sponser_id ?? null,
+                ],
+                ['user_id', 'customer_id'], // Keys to check for upsert
+                ['role_id', 'full_name', 'phone', 'address', 'image_font_id', 'image_back_id', 'bank_account', 'bank_name', 'ewalletAddress', 'user_sponser_id'] // Fields to update
+            );
+
+            //Update user
+            $user = USER::find($request->telegramid);
+            USER::upsert(
+                [
+                    'user_id' => $request->telegramid,
+                    'username' => $request->name ?? $user->username ?? null,
+                    'email' => $request->email ?? $user->email ?? null,
+                    'password' => $request->password ? bcrypt($request->password) : $user->password,  // Handle password properly
+                    'level' => $request->level ?? $user->level ?? null,
+                    'status' => $request->status ?? $user->status ?? null,
+                ],
+                ['user_id'], // Keys to check for upsert
+                ['username', 'email', 'password', 'level', 'status'] // Fields to update
+            );
+
+            return response()->json(['user' => $request->telegramid, 'message' => 'Update profile successfully!'], 201);
+        } 
+        catch (\Exception $e) {
+            Log::error('Update profile failed: ' . $e->getMessage());
+            return response()->json(['error' => 'Update profile failed.'], 500);
         }
     }
 
@@ -234,9 +306,9 @@ class UserManageAPIController extends Controller
     private function buildTree($user)
     {
         $tree = [
-            'id' => $user->user_id,
+            'id' => (string)$user->user_id,
             'text' => $user->full_name,
-            'total_usdt' => $this->getUSDTCustomer($user->user_id),
+            'total_usdt' => (string)$this->getUSDTCustomer($user->user_id),
             'children' => []
         ];
 
@@ -245,6 +317,29 @@ class UserManageAPIController extends Controller
         }
 
         return $tree;
+    }
+
+    public function getUSDTCustomer($customerID)
+    {
+        try {
+            //Customer item
+            $results = DB::table('customer_item')
+                            ->select(
+                                DB::raw('SUM(CASE WHEN type IN (1, 2) THEN value ELSE 0 END) AS sum_type_1_2'),
+                                DB::raw('(SELECT value FROM customer_item WHERE customer_id = ' . $customerID . ' AND type = 3 LIMIT 1) AS value_type_3'),
+                                DB::raw('(SELECT value FROM customer_item WHERE customer_id = ' . $customerID . ' AND type = 4 LIMIT 1) AS value_type_4')
+                            )
+                            ->where('customer_id', $customerID)
+                            ->first();
+            $customer_usdt = $results->sum_type_1_2 ?? 0;
+            $customer_token = $results->value_type_3;
+            $customer_point = $results->value_type_4;       
+            return  $customer_usdt;
+            
+        } catch (\Exception $e) {
+            Log::error('Get USDT Customer ' . $customerID . 'Fail: ' . $e->getMessage());
+            return response()->json(['error' => 'Get USDT Customer ' . $customerID . 'Fail: '], 500);
+        }
     }
 
     public function checkUserID(Request $request)
@@ -400,28 +495,7 @@ class UserManageAPIController extends Controller
         }
     }
 
-    public function getUSDTCustomer($customerID)
-    {
-        try {
-            //Customer item
-            $results = DB::table('customer_item')
-                            ->select(
-                                DB::raw('SUM(CASE WHEN type IN (1, 2) THEN value ELSE 0 END) AS sum_type_1_2'),
-                                DB::raw('(SELECT value FROM customer_item WHERE customer_id = ' . $customerID . ' AND type = 3 LIMIT 1) AS value_type_3'),
-                                DB::raw('(SELECT value FROM customer_item WHERE customer_id = ' . $customerID . ' AND type = 4 LIMIT 1) AS value_type_4')
-                            )
-                            ->where('customer_id', $customerID)
-                            ->first();
-            $customer_usdt = $results->sum_type_1_2 ?? 0;
-            $customer_token = $results->value_type_3;
-            $customer_point = $results->value_type_4;       
-            return  $customer_usdt;
-            
-        } catch (\Exception $e) {
-            Log::error('Get USDT Customer ' . $customerID . 'Fail: ' . $e->getMessage());
-            return response()->json(['error' => 'Get USDT Customer ' . $customerID . 'Fail: '], 500);
-        }
-    }
+    
 
     function calculateTotalUSDT($array, $level = 1) {
         // Define multipliers based on the level

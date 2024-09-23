@@ -148,33 +148,52 @@ class DepositManageAPIController extends Controller
 
     public function callbackDeposit(Request $request)
     {
+        // Validate incoming request data
+        $validator = Validator::make($request->all(), [
+            //'transactionAmount' => 'required|numeric',
+            'customer_id' => 'required|integer',
+            // 'transactionActiveDate' => 'required|string|max:500',
+            // 'benefitAccountNumber' => 'required|string|max:500',
+            // 'narrative' => 'required|string|max:500',
+            // 'bankTransactionId' => 'required|string|max:500',
+            // 'approvedBy' => 'required|string',
+            // 'currency' => 'required|string'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
         try {
+            // Begin database transaction
             DB::transaction(function () use ($request) {
                 // Retrieve the temporary transaction record
-                $transaction_Temp = Transaction_Temp::where('transactionHash', $request->transactionHash)
-                                                    ->where('user_id', $request->customer_id)
-                                                    ->firstOrFail();  // Use firstOrFail to automatically throw exception if not found
+                Transaction_Temp::create([
+                    'user_id' => $request->customer_id,
+                    'type' => 'DEPOSIT',
+                    'amount' => $request->transactionAmount,
+                    'currency' => $request->currency,
+                    'status' => 'DONE',
+                    'bank_account' => $request->benefitAccountNumber,
+                    'origPerson' => $request->approvedBy,
+                    'transactionHash' => $request->bankTransactionId
+                ]);
 
-                // Check if the status is 'WAIT' and the input status is 'DONE'
-                if ($transaction_Temp->status === 'WAIT' && $request->input('status') === 'DONE') {
-                    // Update the status of the transaction
-                    $transaction_Temp->update(['status' => 'DONE']);
-
-                    // Increment the value for the customer item with type = 1
-                    CustomerItem::where('customer_id', $request->customer_id)
-                                ->where('type', 1)
-                                ->increment('value', (int) $transaction_Temp->amount);
-                }
+                // Update transaction status and increment the customer item value if status is 'DONE'
+                CustomerItem::where('customer_id', $request->customer_id)
+                            ->where('type', 1)
+                            ->increment('value', $request->transactionAmount);
             });
 
-            return response()->json(['message' => 'Callback successfully!'], 201);
-            
+            return response()->json(['message' => 'Callback deposit successfully!'], 201);
+
         } catch (\Exception $e) {
-            // Log the exception and return error response
-            Log::error('Callback failed: ' . $e->getMessage());
-            return response()->json(['error' => 'Callback failed.'], 500);
+            // Log exception and return error response
+            Log::error('Callback deposit failed: ' . $e->getMessage());
+            return response()->json(['error' => 'Callback failed: ' . $e->getMessage()], 500);
         }
     }
+
 
     
 }

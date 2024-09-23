@@ -98,8 +98,6 @@ class CustomerRegisterController extends Controller
         catch(e){
             return back()->withErrors(['Update Info' => 'Update info fail']);
         }
-        
-        
     }
 
     public function showChangePasswordForm()

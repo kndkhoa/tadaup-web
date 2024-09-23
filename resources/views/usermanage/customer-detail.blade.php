@@ -24,6 +24,34 @@
 
       <!-- Default box -->
       
+      <!-- title row -->
+      <!-- info row -->
+      <div class="card card-solid">
+        <div class="card-body pb-0">
+          <address>
+          <b>FullName:</b> {{$customerByID->full_name}}<br>
+          <b>Address:</b> {{$customerByID->address}}<br>
+          <b>Phone:</b> {{$customerByID->phone}}<br>
+          <b>User_ID:</b> {{$customerByID->user_id}}<br>
+          </address>
+        </div>
+        <!-- /.col -->
+        <div class="col-sm-4 invoice-col">
+          <address>
+          <b>Bank Account:</b> {{$customerByID->bank_account}}<br>
+          <b>Bank Name:</b> {{$customerByID->bank_name}}<br>
+          <b>User_Sponser_ID:</b> {{$customerByID->user_sponser_id}}<br>
+          </address>
+        </div>
+        <!-- /.col -->
+        <div class="col-sm-4 invoice-col">
+          <b>Ewallet Address:</b> {{$customerByID->ewalletAddress}}<br>
+          <b>Ewallet Network:</b> {{$customerByID->ewalletNetwork}}<br>
+        </div>
+        <!-- /.col -->
+      </div>
+      <!-- /.row -->
+
       <div class="card card-solid">
         <div class="card-body pb-0">
           <div class="row">
