@@ -10,7 +10,6 @@ class CheckApiKey
     {
         // Retrieve the API key from the request header
         $apiKey = $request->header('x-api-key');
-
         // Compare with the one stored in .env
         if ($apiKey !== env('API_KEY')) {
             // If the key doesn't match, return an error response

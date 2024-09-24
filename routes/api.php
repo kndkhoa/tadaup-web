@@ -33,10 +33,15 @@ Route::group(['prefix' => 'homecampainfx', 'as' => 'homecampainfx.'], function()
     Route::get('campainNew', [HomeCampainFXAPIController::class, 'new'])->name('campainNew');
 });
 
+// Group routes under depositManage with check.apikey middleware
 Route::group(['prefix' => 'depositManage', 'as' => 'depositmanage.', 'middleware' => 'check.apikey'], function() {
     Route::post('/deposit', [DepositManageAPIController::class, 'deposit'])->name('deposit');
-    Route::post('/callback', [DepositManageAPIController::class, 'callbackDeposit'])->name('callbackDeposit');
 });
+
+// Separate route for /callback with check.apikeyopen middleware
+Route::post('/depositManage/callback', [DepositManageAPIController::class, 'callbackDeposit'])
+    ->name('depositmanage.callbackDeposit')
+    ->middleware('check.apikeyopen');  // Use different middleware here
 
 Route::group(['prefix' => 'withdrawManage', 'as' => 'withdrawmanage.'], function() {
     Route::post('/withdraw', [WithdrawManageAPIController::class, 'withdrawOrder'])->name('withdrawOrder');
