@@ -20,13 +20,10 @@ class WithdrawManageAPIController extends Controller
         try {
             // Validate incoming request data
             $validator = Validator::make($request->all(), [
-                'customer_id' => 'required|integer|min:1',
+                'customer_id' => 'required|string|min:1',
                 'amount' => 'required|string|max:255',
-                'eWallet' => 'required|string|max:500',
-                'payee_bank_code' => 'required|string|max:500',
-                'payee_bank_account_no' => 'required|string|max:500',
-                'payee_bank_account_name' => 'required|string|max:500',
-                'description' => 'required|string|max:500',
+                //'eWallet' => 'required|string|max:500',
+               // 'description' => 'required|string|max:500',
             ]);
 
             if ($validator->fails()) {
@@ -37,28 +34,18 @@ class WithdrawManageAPIController extends Controller
             $customerByID = Customer::find($request->input('customer_id'));
             // Create a new order
             $transaction_temp = transaction_temp::create([
-                'user_id' => $request->input('customer_id'),
+                'user_id' => $request->customer_id,
                 'type' => 'WITHDRAW',
-                'amount' => $request->input('amount'),
+                'amount' => $request->amount,
                 'currency' => 'USD',
-                'eWallet' => $request->input('eWallet'),
-                'transactionHash' => $order_code,
-                'bank_name' => $request->input('payee_bank_code'),
-                'bank_account' => $request->input('payee_bank_account_no'),
-                'fullname' => $request->input('payee_bank_account_name'),
-                'status' => 'ORIG'
+                'eWallet' => $request->eWallet ?? null, 
+                'transactionHash' => $order_code ?? null,
+                'description' => $request->description ?? null,
+                'status' => 'WAIT'
 
             ]);
 
-            $createOrder = self::callAPIPartnerWithdraw($order_code, $request);
-            if($createOrder['code'] = 200){
-                $transaction_temp->update(['status' => 'WAIT'
-                ]);
-                // Return a success response with the created order
-                return response()->json(['order' => $createOrder, 'message' => 'Withdraw created successfully!'], 201);
-            }
-
-            return response()->json(['error' => 'Create Order Withdraw failed.'], 500);
+            return response()->json(['order' => $order_code, 'message' => 'Withdraw created successfully!'], 201);
 
         } catch (\Exception $e) {
             Log::error('Create Order Deposit failed: ' . $e->getMessage());
@@ -111,74 +98,5 @@ class WithdrawManageAPIController extends Controller
         }
     }
 
-    public function callAPIPartnerWithdraw ($order_code, $request)
-    {
-        // Define required parameters
-        $partner_id = 'your_partner_id'; // Replace with your partner ID
-        $timestamp = Carbon::now()->timestamp; // Current timestamp
-        $random = Str::random(10); // Generate a random string
-        $partner_order_code = $order_code; // Unique transaction ID
-        $amount = $request->input('amount'); // Amount of the payment
-        $payee_bank_code = $request->input('payee_bank_code');
-        $payee_bank_account_type = 'account';
-        $payee_bank_account_no = $request->input('payee_bank_account_no');
-        $payee_bank_account_name = $request->input('payee_bank_account_name');
-        $notify_url = 'https://yourdomain.com/notify'; // Notification URL
-        $message = ''; // Return URL after transaction
-        $extra_data = ''; // Additional data if required
-        $partner_secret = 'your_partner_secret'; // Replace with your partner secret
-
-        // Generate signature
-        $signature_string = implode(':', [
-            $partner_id,
-            $timestamp,
-            $random,
-            $partner_order_code,
-            $amount,
-            $payee_bank_code,
-            $payee_bank_account_type,
-            $payee_bank_account_no,
-            $payee_bank_account_name,
-            $message,
-            $extra_data,
-            $partner_secret
-        ]);
-
-        $sign = md5($signature_string);
-
-        // Prepare data for the request
-        $data = [
-            'partner_id' => $partner_id,
-            'timestamp' => $timestamp,
-            'random' => $random,
-            'partner_order_code' => $partner_order_code,
-            'amount' => $amount,
-            'payee_bank_code' => $payee_bank_code,
-            'payee_bank_account_type' => $payee_bank_account_type,
-            'payee_bank_account_no' => $payee_bank_account_no,
-            'payee_bank_account_name' => $payee_bank_account_name,
-            'notify_url' => $notify_url,
-            'message' => $message,
-            'extra_data' => $extra_data,
-            'sign' => $sign,
-        ];
-
-        // Call the API using HTTP POST
-        try {
-            //$response = Http::post('https://example.com/gateway/bnb/transferATM.do', $data);
-            $response = '{
-                "code":200, "msg":"success","data":{ "partner_order_code":"2021112116414321046"
-                } }';
-
-            // Log response for debugging purposes
-            $responseArray = json_decode($response, true);
-            Log::info('API Response:', ['response' =>  $responseArray]);
-
-            // Return the response or handle it accordingly
-            return  $responseArray;
-        } catch (\Exception $e) {
-            Log::error('API Call Failed:', ['error' => $e->getMessage()]);
-            return ['error' => $e->getMessage()];
-        }
-    }
+    
 }

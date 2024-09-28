@@ -160,39 +160,45 @@ class UserManageAPIController extends Controller
 
             //Update customer
             $customer = Customer::find($request->telegramid);
-            Customer::upsert(
-                [
-                    'user_id' => $request->telegramid,
-                    'customer_id' => $request->telegramid,
-                    'role_id' => 1,
-                    'full_name' => $request->name ?? $customer->full_name ?? null,
-                    'phone' => $request->phone ?? $customer->phone ?? null,
-                    'address' => $request->address ?? $customer->address ?? null,
-                    'image_font_id' => $path1 ?? $customer->image_font_id ?? null,
-                    'image_back_id' => $path2 ?? $customer->image_back_id ?? null,
-                    'bank_account' => $request->bank_account ?? $customer->bank_account ?? null,
-                    'bank_name' => $request->bank_name ?? $customer->bank_name ?? null,
-                    'ewalletAddress' => $request->ewalletAddress ?? $customer->ewalletAddress ?? null,
-                    'user_sponser_id' => $request->sponser_userid ?? $customer->user_sponser_id ?? null,
-                ],
-                ['user_id', 'customer_id'], // Keys to check for upsert
-                ['role_id', 'full_name', 'phone', 'address', 'image_font_id', 'image_back_id', 'bank_account', 'bank_name', 'ewalletAddress', 'user_sponser_id'] // Fields to update
-            );
+            if($customer){
+                Customer::upsert(
+                    [
+                        'user_id' => $request->telegramid,
+                        'customer_id' => $request->telegramid,
+                        'role_id' => 1,
+                        'full_name' => $request->name ?? $customer->full_name ?? null,
+                        'phone' => $request->phone ?? $customer->phone ?? null,
+                        'address' => $request->address ?? $customer->address ?? null,
+                        'image_font_id' => $path1 ?? $customer->image_font_id ?? null,
+                        'image_back_id' => $path2 ?? $customer->image_back_id ?? null,
+                        'bank_account' => $request->bank_account ?? $customer->bank_account ?? null,
+                        'bank_name' => $request->bank_name ?? $customer->bank_name ?? null,
+                        'ewalletAddress' => $request->ewalletAddress ?? $customer->ewalletAddress ?? null,
+                        'user_sponser_id' => $request->sponser_userid ?? $customer->user_sponser_id ?? null,
+                    ],
+                    ['user_id', 'customer_id'], // Keys to check for upsert
+                    ['role_id', 'full_name', 'phone', 'address', 'image_font_id', 'image_back_id', 'bank_account', 'bank_name', 'ewalletAddress', 'user_sponser_id'] // Fields to update
+                );
+            }
+            
 
             //Update user
             $user = USER::find($request->telegramid);
-            USER::upsert(
-                [
-                    'user_id' => $request->telegramid,
-                    'username' => $request->name ?? $user->username ?? null,
-                    'email' => $request->email ?? $user->email ?? null,
-                    'password' => $request->password ? bcrypt($request->password) : $user->password,  // Handle password properly
-                    'level' => $request->level ?? $user->level ?? null,
-                    'status' => $request->status ?? $user->status ?? null,
-                ],
-                ['user_id'], // Keys to check for upsert
-                ['username', 'email', 'password', 'level', 'status'] // Fields to update
-            );
+            if($user){
+                USER::upsert(
+                    [
+                        'user_id' => $request->telegramid,
+                        'username' => $request->name ?? $user->username ?? null,
+                        'email' => $request->email ?? $user->email ?? null,
+                        'password' => $request->password ? bcrypt($request->password) : $user->password,  // Handle password properly
+                        'level' => $request->level ?? $user->level ?? null,
+                        'status' => $request->status ?? $user->status ?? null,
+                    ],
+                    ['user_id'], // Keys to check for upsert
+                    ['username', 'email', 'password', 'level', 'status'] // Fields to update
+                );
+            }
+            
 
             return response()->json(['user' => $request->telegramid, 'message' => 'Update profile successfully!'], 201);
         } 

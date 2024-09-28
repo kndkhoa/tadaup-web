@@ -26,6 +26,7 @@ class Transaction_Temp extends Authenticatable
         'currency',
         'eWallet',
         'transactionHash',
+        'description',
         'bank_name',
         'bank_account',
         'bank_city',

@@ -9,11 +9,13 @@ use App\Models\CampainFX;
 use App\Models\Customer;
 use App\Models\CustomerItem;
 use App\Models\Transaction_Temp;
+use App\Models\WalletTadaup;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 
 
 
@@ -165,34 +167,105 @@ class DepositManageAPIController extends Controller
         }
 
         try {
-            // Begin database transaction
+            // Check if the customer ID is '1'
+            if ($request->customer_id === "1") {
+                $walletTadaup = WalletTadaup::where('walletName', 'LIQUID')
+                                            ->where('id', 2)
+                                            ->first();
+
+                if (!$walletTadaup) {
+                    return response()->json(['error' => 'Wallet not found'], 404);
+                }
+
+                // Define the URL to check the hash
+                $url = 'https://apilist.tronscanapi.com/api/transaction-info?hash=' . $request->bankTransactionId;
+                $response = Http::get($url);
+                // Check if the API call was successful
+                if ($response->failed() || $response->body() === "{}\n") {
+                    // Log the failed or empty response
+                    Log::info('API returned empty response for bankTransactionId: ' . $request->bankTransactionId);
+
+                    // Create a "WAIT" status transaction
+                    Transaction_Temp::create([
+                        'user_id' => $request->customer_id,
+                        'type' => 'DEPOSIT',
+                        'amount' => $request->transactionAmount,
+                        'currency' => $request->currency,
+                        'eWallet' => '1',
+                        'status' => 'WAIT',
+                        'bank_account' => $request->benefitAccountNumber ?? null,
+                        'origPerson' => $request->approvedBy ?? null,
+                        'transactionHash' => $request->bankTransactionId ?? null,
+                        'description' => $request->narrative ?? null
+                    ]);
+
+                    return response()->json(['message' => 'Transaction is pending'], 202);
+                }
+
+                // Check response data validity
+                if (
+                    isset($response['contractData']['to_address']) &&
+                    $response['contractData']['to_address'] === 'TQA2Z63x5rN561gCZSEnNPK5A5HK4W813s' &&
+                    isset($response['contractData']['amount']) &&
+                    (string)$response['contractData']['amount'] === (string)$request->transactionAmount
+                ) {
+                    // Perform database operations in a transaction
+                    DB::transaction(function () use ($request) {
+                        // Create the transaction record
+                        Transaction_Temp::create([
+                            'user_id' => $request->customer_id,
+                            'type' => 'DEPOSIT',
+                            'amount' => $request->transactionAmount,
+                            'currency' => $request->currency,
+                            'eWallet' => '1',
+                            'status' => 'DONE',
+                            'bank_account' => $request->benefitAccountNumber ?? null,
+                            'origPerson' => $request->approvedBy ?? null,
+                            'transactionHash' => $request->bankTransactionId ?? null,
+                            'description' => $request->narrative ?? null
+                        ]);
+
+                        // Update the wallet value
+                        WalletTadaup::where('walletName', 'LIQUID')
+                            ->where('id', 2)
+                            ->increment('value', $request->transactionAmount);
+                    });
+
+                    return response()->json(['message' => 'Transaction completed successfully!'], 200);
+                } else {
+                    return response()->json(['error' => 'Transaction validation failed'], 400);
+                }
+            }
+
+            // If the customer ID is not '1', create a transaction for a regular customer
             DB::transaction(function () use ($request) {
-                // Retrieve the temporary transaction record
                 Transaction_Temp::create([
                     'user_id' => $request->customer_id,
                     'type' => 'DEPOSIT',
                     'amount' => $request->transactionAmount,
                     'currency' => $request->currency,
+                    'eWallet' => '1',
                     'status' => 'DONE',
-                    'bank_account' => $request->benefitAccountNumber,
-                    'origPerson' => $request->approvedBy,
-                    'transactionHash' => $request->bankTransactionId
+                    'bank_account' => $request->benefitAccountNumber ?? null,
+                    'origPerson' => $request->approvedBy ?? null,
+                    'transactionHash' => $request->bankTransactionId ?? null,
+                    'description' => $request->narrative ?? null
                 ]);
 
-                // Update transaction status and increment the customer item value if status is 'DONE'
+                // Update the customer item value
                 CustomerItem::where('customer_id', $request->customer_id)
                             ->where('type', 1)
                             ->increment('value', $request->transactionAmount);
             });
 
             return response()->json(['message' => 'Callback deposit successfully!'], 201);
-
         } catch (\Exception $e) {
-            // Log exception and return error response
+            // Log the exception and return an error response
             Log::error('Callback deposit failed: ' . $e->getMessage());
             return response()->json(['error' => 'Callback failed: ' . $e->getMessage()], 500);
         }
     }
+
 
 
     
