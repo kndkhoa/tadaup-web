@@ -33,8 +33,8 @@ Route::controller(LoginRegisterController::class)->group(function() {
     Route::get('/register', 'register')->name('register');
     Route::post('/store', 'store')->name('store');
     Route::get('/login', 'login')->name('login');
-    Route::post('/authenticate', 'authenticate')->name('authenticate');
-    Route::get('/dashboard', 'dashboard')->name('dashboard');
+    Route::post('/auth', 'auth')->name('auth');
+    Route::get('/dashboard', 'dashboard')->name('dashboard')->middleware('auth');
     Route::post('/logout', 'logout')->name('logout');
 });
 
@@ -106,10 +106,12 @@ Route::controller(UserManageController::class)->middleware('auth')->group(functi
 Route::controller(DepositManageController::class)->middleware('auth')->group(function() {
     Route::get('/campaignTransaction', 'showCampaignList')->name('showCampaignList')->middleware('level:0');
     Route::match(['get', 'post'], '/campaignTransaction/{id}/deposit-detail', 'depositDetail')->name('depositDetail')->middleware('level:0');
+    Route::get('/depositWait', 'showDepositWait')->name('showDepositWait')->middleware('level:0');
     Route::get('/depositDone', 'showDepositDone')->name('showDepositDone')->middleware('level:0');
     Route::get('/depositProcess', 'showDepositProcess')->name('showDepositProcess')->middleware('level:0');
     Route::get('/depositWin', 'showDepositWin')->name('showDepositWin')->middleware('level:0');
     Route::get('/depositReject', 'showDepositReject')->name('showDepositReject')->middleware('level:0');
+    Route::post('/campaignTransaction/{id}/approve-wallet', 'approveWallet')->name('approveWallet')->middleware('level:0');  
     Route::post('/campaignTransaction/{id}/approve', 'depositApprove')->name('depositApprove')->middleware('level:0');  
     Route::post('/campaignTransaction/{id}/reject', 'depositReject')->name('depositReject')->middleware('level:0');  
     Route::post('/campaignTransaction/{id}/process', 'depositProcess')->name('depositProcess')->middleware('level:0');  

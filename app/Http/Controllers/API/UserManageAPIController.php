@@ -429,7 +429,7 @@ class UserManageAPIController extends Controller
 
                 // Update type 4 by adding $totalPoint to the value of type 3
                 if ($valueType4) {
-                    $valueType4->value = $totalPoint = 0 ? $valueType3 :$totalPoint * $valueType3;
+                    $valueType4->value = $totalPoint == 0 ? $valueType3 :$totalPoint * $valueType3;
                     $valueType4->save();
                 }
             }
@@ -459,12 +459,12 @@ class UserManageAPIController extends Controller
 
             $customerItems = CustomerItem::where('type', 4)->get();
             foreach ($customerItems as $customerItem) {
-                // Retrieve both type 3 and type 4 for the same customer
+                // Retrieve both type 4 and type 5 for the same customer
                 $items = CustomerItem::where('customer_id', $customerItem->customer_id)
                     ->whereIn('type', [4, 5])
                     ->get();
 
-                // Extract the current values for type 3 and type 4
+                // Extract the current values for type 4 and type 5
                 $valueType4 = $items->firstWhere('type', 4)->value ?? 0;  // Default to 0 if not found
                 $valueType5 = $items->firstWhere('type', 5);
 

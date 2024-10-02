@@ -12,6 +12,8 @@ use App\Models\CampainFX;
 use App\Models\CampainFX_Txn;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+//use Illuminate\Foundation\Auth\AuthenticatesUsers;
+
 
 
 class LoginRegisterController extends Controller
@@ -19,6 +21,9 @@ class LoginRegisterController extends Controller
     /**
      * Instantiate a new LoginRegisterController instance.
      */
+    //////use AuthenticatesUsers;
+    protected $redirectTo = '/dashboard';  
+
     public function __construct()
     {
         $this->middleware('guest')->except([
@@ -133,26 +138,47 @@ class LoginRegisterController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function authenticate(Request $request)
+    // public function authenticate(Request $request)
+    // {
+    //     // Validate credentials
+    //     $credentials = $request->validate([
+    //         'email' => 'required|email',
+    //         'password' => 'required'
+    //     ]);
+
+    //     // Check if credentials match
+    //     if (Auth::attempt($credentials)) {
+    //         // Regenerate session to prevent session fixation attacks
+    //         $request->session()->regenerate();
+
+    //         // Redirect to dashboard on success
+    //         return redirect()->route('dashboard')
+    //                         ->with('success', 'You have successfully logged in!');
+    //     }
+
+    //     // Redirect back with error message on failure
+    //     return back()->withErrors([
+    //         'email' => 'The provided credentials do not match our records.',
+    //     ])->onlyInput('email');
+    // }
+
+    public function auth(Request $request)
     {
         $credentials = $request->validate([
-            'email' => 'required|email',
-            'password' => 'required'
+            'email' => ['required', 'email'],
+            'password' => ['required'],
         ]);
-        $email    = $request->input("email");
-        $password = $request->input("password");
-        if(Auth::attempt($credentials))
-        {
+
+        if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
-            return redirect()->route('dashboard')
-                ->withSuccess('You have successfully logged in!');
+            return redirect()->intended('dashboard');  // Change 'dashboard' to the route you want to redirect after login
         }
 
         return back()->withErrors([
-            'email' => 'Your provided credentials do not match in our records.',
+            'email' => 'The provided credentials do not match our records.',
         ])->onlyInput('email');
+    }
 
-    } 
     
     /**
      * Display a dashboard to authenticated users.

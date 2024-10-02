@@ -394,6 +394,14 @@
             </ul>
             <ul class="nav nav-treeview">
               <li class="nav-item">
+                <a href="{{ route('showDepositWait') }}" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Deposit Wait</p>
+                </a>
+              </li>
+            </ul>
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
                 <a href="{{ route('showDepositDone') }}" class="nav-link">
                   <i class="far fa-circle nav-icon"></i>
                   <p>Deposit Done</p>

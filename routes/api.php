@@ -43,6 +43,11 @@ Route::post('/depositManage/callback', [DepositManageAPIController::class, 'call
     ->name('depositmanage.callbackDeposit')
     ->middleware('check.apikeyopen');  // Use different middleware here
 
+// Separate route for /callback with check.apikeyopen middleware
+Route::post('/depositManage/callback-liquid', [DepositManageAPIController::class, 'callbackDepositLiquid'])
+    ->name('depositmanage.callbackDepositLiquid')
+    ->middleware('check.apikeyopen');  // Use different middleware here
+
 Route::group(['prefix' => 'withdrawManage', 'as' => 'withdrawmanage.'], function() {
     Route::post('/withdraw', [WithdrawManageAPIController::class, 'withdrawOrder'])->name('withdrawOrder');
     Route::post('/callback', [WithdrawManageAPIController::class, 'callbackWithdraw'])->name('callbackWithdraw');
