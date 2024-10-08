@@ -34,6 +34,7 @@ Route::controller(LoginRegisterController::class)->group(function() {
     Route::post('/store', 'store')->name('store');
     Route::get('/login', 'login')->name('login');
     Route::post('/auth', 'auth')->name('auth');
+    Route::post('/checklogin', 'checklogin')->name('checklogin');
     Route::get('/dashboard', 'dashboard')->name('dashboard')->middleware('auth');
     Route::post('/logout', 'logout')->name('logout');
 });
@@ -96,6 +97,9 @@ Route::controller(HomeCampainFXController::class)->group(function() {
 //User Management Controller
 Route::controller(UserManageController::class)->middleware('auth')->group(function() {
     Route::get('/cutomer-list', 'showCustomerList')->name('showCustomerList')->middleware('level:0');
+    Route::get('/wallettada-list', 'showWalletTada')->name('showWalletTada')->middleware('level:0');
+    Route::get('/wallettada-history', 'showWalletTadaHistory')->name('showWalletTadaHistory')->middleware('level:0');
+    Route::post('/calculate-point', 'calculatePoint')->name('calculatePoint')->middleware('level:0');
     Route::match(['get', 'post'],'/customer-detail/{id}', 'showCustomerDetail')->name('showCustomerDetail')->middleware('level:0');
     Route::post('/creatConnection', 'creatConnection')->name('creatConnection')->middleware('level:0');
     Route::post('/deleteConnection/{id}/delete', 'deleteConnection')->name('deleteConnection')->middleware('level:0');

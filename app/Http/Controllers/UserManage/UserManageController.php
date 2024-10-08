@@ -14,6 +14,10 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
+use App\Models\WalletTadaup;
+use Illuminate\Support\Facades\Http;  // Laravel's HTTP client
+use App\Models\Transaction_Temp;
+
 
 
 class UserManageController extends Controller
@@ -40,6 +44,54 @@ class UserManageController extends Controller
         catch (e){
             return redirect()->route('showCustomerList')
             ->withErrors('Get All Campaign Fail.' + e);
+        }
+    }
+
+    public function showWalletTada()
+    {
+        try{
+            //$customers = Customer::all();
+            $walletTadaups = WalletTadaup::getAll();
+            return view('usermanage.wallettada-list', compact(['walletTadaups']));
+        }
+        catch (e){
+            return redirect()->route('showWalletTada')
+            ->withErrors('Get All Wallet Fail.' + e);
+        }
+    }
+
+    public function showWalletTadaHistory()
+    {
+        try{
+            $walletTadaupHist = transaction_temp::where('user_id', '1')
+                                                ->where('eWallet', '2')
+                                        ->get(); 
+            return view('usermanage.wallettada-history', compact(['walletTadaupHist']));
+        }
+        catch (e){
+            return redirect()->route('showWalletTadaHistory')
+            ->withErrors('Get All Wallet Fail.' + e);
+        }
+    }
+
+    public function calculatePoint()
+    {
+        // API URL
+        $url = 'http://admin.tducoin.com/api/usermanage/calculate-point';
+        
+        // Make the API call using POST method with the API key in headers
+        $response = Http::withHeaders([
+            'x-api-key' => 'oqKbBxKcEn9l4IXE4EqS2sgNzXPFvE',
+        ])->post($url, []);
+
+        // Check the status and return the result
+        if ($response->successful()) {
+            // The API call was successful, return or process the response
+            $data = $response->json(); // Assuming the response is JSON
+            return redirect()->back()->with('success', 'Calculate point successfully.');
+        } else {
+            // The API call failed, return error response
+            return redirect()->back()->withErrors('Calculate point fail.');
         }
     }
 

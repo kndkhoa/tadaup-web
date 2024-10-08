@@ -7,12 +7,12 @@
       <div class="container-fluid">
         <div class="row mb-2">
           <div class="col-sm-6">
-            <h1>User Management</h1>
+            <h1>Wallet Tadaup History</h1>
           </div>
           <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
               <li class="breadcrumb-item"><a href="#">Home</a></li>
-              <li class="breadcrumb-item active">User Management</li>
+              <li class="breadcrumb-item active">Wallet Tadaup History</li>
             </ol>
           </div>
         </div>
@@ -25,8 +25,15 @@
       <!-- Default box -->
       <div class="card">
         <div class="card-header">
-          <h3 class="card-title">User Management</h3>
-
+          <h3 class="card-title">Wallet Tadaup History</h3>
+          @if(session('success'))
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    {{ session('success') }}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                @endif
           <div class="card-tools">
             <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
               <i class="fas fa-minus"></i>
@@ -38,48 +45,45 @@
               <thead>
                   <tr>
                       <th>
-                      ID
+                      Wallet Tadaup
                       </th>
                       <th>
-                        Customer Name
+                      Type
                       </th>
                       <th>
-                          Phone
+                          Amount
                       </th>
                       <th>
-                          Email
+                      Wallet
                       </th>
                       <th>
-                          SponserID
+                          Description
                       </th>
                       <th>
-                          Detail
+                          Create At
                       </th>
                   </tr>
               </thead>
               <tbody>
-              @foreach($customers as $customer)
+              @foreach($walletTadaupHist as $walletTadaup)
                   <tr>
                       <td>
-                        {{$customer->customer_id}}
+                        {{$walletTadaup->user_id}}
                       </td>
                       <td>
-                        {{$customer->full_name}}
+                        {{$walletTadaup->type}}
                       </td>
                       <td>
-                        {{$customer->phone}}
+                        {{$walletTadaup->amount}}
                       </td>
                       <td>
-                        {{$customer->email}}
+                        INCOME
                       </td>
                       <td>
-                        {{$customer->user_sponser_id}}
+                      {{$walletTadaup->description}}
                       </td>
-                      <td class="project-actions text-right">
-                                  <form action="{{ route('showCustomerDetail', $customer['customer_id']) }}" method="POST" style="display: inline;">
-                                      @csrf
-                                      <input type="submit" value="View" class="btn btn-primary btn-sm">
-                       </form>
+                      <td>
+                        {{$walletTadaup->created_at}}
                       </td>
                   </tr>
                   @endforeach

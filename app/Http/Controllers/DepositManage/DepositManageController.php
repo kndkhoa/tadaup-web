@@ -108,7 +108,7 @@ class DepositManageController extends Controller
                                 ->orderBy('campainFX_Txn.created_at', 'desc') // Sort by creation date in descending order
                                 ->join('customers', 'campainFX_Txn.customerID', '=', 'customers.user_id')
                                 ->join('campainFX', 'campainFX_Txn.campainID', '=', 'campainFX.campainID')
-                                ->select('campainFX_Txn.*', 'customers.full_name as customer_name', 'campainFX.campainName') // Select relevant columns
+                                ->select('campainFX_Txn.*', 'customers.full_name as customer_name', 'campainFX.campainName', 'campainFX.campainID as campainID') // Select relevant columns
                                 ->get();
             return view('depositManage.depositdone', compact(['CampainFXTXN']));
 
@@ -305,12 +305,11 @@ class DepositManageController extends Controller
             $customer = Customer::find($user_id);
             $CampainFXTXN_ID = CampainFX_Txn::findOrFail($id);
             $desired_status = $CampainFXTXN_ID->status ?? '';
-            if($CampainFXTXN_ID->status == 'PROCESS')
-            {
+            
                 $CampainFXTXN_ID->update(['status' => 'WIN',
                                         'origPerson' => $customer->full_name
                                         ]);
-            }
+            
              return redirect()->back()->with('success', 'Transaction win successfully.');
         }
         catch (e){

@@ -55,13 +55,11 @@
                       <th>Campaign Name</th>
                       <th>Customer ID</th>
                       <th>Customer Name</th>
-                      <th>Type</th>
                       <th>Amount</th>
-                      <th>eWallet</th>
-                      <th>Orig Person</th>
                       <th>Status</th>
                       <th>Create_At</th>
                       <th>Process</th>
+                      <th>Win</th>
                     </tr>
                     </thead>
                     <tbody>          
@@ -70,18 +68,25 @@
                       <td>{{$transaction_temp['campainName']}}</td>
                       <td>{{$transaction_temp['customerID']}}</td>
                       <td>{{$transaction_temp['customer_name']}}</td>
-                      <td>{{$transaction_temp['txnType']}}</td>
                       <td>{{$transaction_temp['amount']}}</td>
-                      <td>{{$transaction_temp['ewalletCustomerID']}}</td>
-                      <td>{{$transaction_temp['origPerson']}}</td>
                       <td>{{$transaction_temp['status']}}</td>
                       <td>{{$transaction_temp['created_at']}}</td>
                         
                         <td>
-                          @if($transaction_temp->status == 'DONE')
+                          @if($transaction_temp->status == 'DONE' && ($transaction_temp->campainID == '1' || $transaction_temp->campainID == '2'))
                           <form action="{{ route('depositProcess', $transaction_temp->id) }}" method="POST" style="display: inline;">
                             @csrf
                             <input type="submit" value="Process" class="btn btn-success float-right" style="margin-right: 5px;">
+                          </form>
+                          @endif
+                        </td>
+                        <td>
+                        <td>
+                          @if($transaction_temp->status == 'DONE' && ($transaction_temp->campainID == '3' || $transaction_temp->campainID == '4'  ||
+                                                                      $transaction_temp->campainID == '5' || $transaction_temp->campainID == '6' ))
+                          <form action="{{ route('depositWin', $transaction_temp->id) }}" method="POST" style="display: inline;">
+                            @csrf
+                            <input type="submit" value="Win" class="btn btn-success float-right" style="margin-right: 5px;">
                           </form>
                           @endif
                         </td>

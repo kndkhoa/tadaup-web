@@ -55,9 +55,7 @@
                       <th>Campaign Name</th>
                       <th>Customer ID</th>
                       <th>Customer Name</th>
-                      <th>Type</th>
                       <th>Amount</th>
-                      <th>eWallet</th>
                       <th>Orig Person</th>
                       <th>Status</th>
                       <th>Create_At</th>
@@ -69,9 +67,7 @@
                       <td>{{$transaction_temp['campainName']}}</td>
                       <td>{{$transaction_temp['customerID']}}</td>
                       <td>{{$transaction_temp['customer_name']}}</td>
-                      <td>{{$transaction_temp['txnType']}}</td>
                       <td>{{$transaction_temp['amount']}}</td>
-                      <td>{{$transaction_temp['ewalletCustomerID']}}</td>
                       <td>{{$transaction_temp['origPerson']}}</td>
                       <td>{{$transaction_temp['status']}}</td>
                       <td>{{$transaction_temp['created_at']}}</td>

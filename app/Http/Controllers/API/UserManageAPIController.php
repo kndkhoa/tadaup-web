@@ -315,6 +315,7 @@ class UserManageAPIController extends Controller
             'id' => (string)$user->user_id,
             'text' => $user->full_name,
             'total_usdt' => (string)$this->getUSDTCustomer($user->user_id),
+            'total_campaign' => (string)$this->getCountCampaign($user->user_id),
             'children' => []
         ];
 
@@ -344,6 +345,19 @@ class UserManageAPIController extends Controller
             
         } catch (\Exception $e) {
             Log::error('Get USDT Customer ' . $customerID . 'Fail: ' . $e->getMessage());
+            return response()->json(['error' => 'Get USDT Customer ' . $customerID . 'Fail: '], 500);
+        }
+    }
+
+    public function getCountCampaign($customerID)
+    {
+        try {
+            $sumCampaign = CampainFX_Txn::where('customerID', $customerID)->count();
+
+            return  $sumCampaign;
+            
+        } catch (\Exception $e) {
+            Log::error('Count Campaign Customer ' . $customerID . 'Fail: ' . $e->getMessage());
             return response()->json(['error' => 'Get USDT Customer ' . $customerID . 'Fail: '], 500);
         }
     }
