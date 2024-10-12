@@ -131,30 +131,33 @@ class DepositManageAPIController extends Controller
                 // Transaction for withdrawal
                 $order_code = 'ORD' . Str::uuid()->toString();
                 $campainFX = CampainFX::where('campainID', $request->campainID)
-                                        ->firstOrFail();  // Throws exception if not found                  
+                                        ->firstOrFail();  // Throws exception if not found  
+                if (!$campainFX) {
+                    return response()->json(['error' => $request->campainID . ' not exists.'], 500);
+                }                
                 $transaction_Temp = Transaction_Temp::create([
                     'user_id' => $request->customer_id,
                     'type' => 'WITHDRAW',
-                    'amount' => $campainFX->campain_amount,
+                    'amount' => $request->amount,
                     'currency' => 'USD',
                     'eWallet' => '1',
                     'transactionHash' => $order_code,
                     'status' => 'DONE',
                 ]);
-               // dd($campainFX->campain_amount);
+                
                 DB::transaction(function () use ($request, $campainFX) {
                     // Retrieve and update customer item for type = 1
                     $customerItemType1 = CustomerItem::where('customer_id', $request->customer_id)
                         ->where('type', 1)
                         ->firstOrFail();  // Throws exception if not found
 
-                    if ((int)$customerItemType1->value < (int)$campainFX->campain_amount) {
-                        throw new \Exception("Insufficient funds.");
+                    if ((double)$customerItemType1->value < (double)$request->amount) {
+                        return response()->json(['error' => 'Insufficient funds.'], 500);
                     }
 
                     // Decrement the value for type = 1
                     $customerItemType1->update([
-                        'value' => (int) $customerItemType1->value - (int) $campainFX->campain_amount
+                        'value' => (double) $customerItemType1->value - (double) $request->amount
                     ]);
 
                     // Retrieve and update customer item for type = 2
@@ -164,7 +167,7 @@ class DepositManageAPIController extends Controller
 
                     // Increment the value for type = 2
                     $customerItemType2->update([
-                        'value' => (int) $customerItemType2->value + (int) $campainFX->campain_amount
+                        'value' => (double) $customerItemType2->value + (double) $request->amount
                     ]);
                 });
 
@@ -174,10 +177,10 @@ class DepositManageAPIController extends Controller
                     'customerID' => $request->customer_id,
                     'ewalletCustomerID' => $request->ewallet,
                     'txnType' => 'DEPOSIT',
-                    'amount' => $campainFX->campain_amount,
+                    'amount' => $request->amount,
                     'txnDescription' => $request->description,
                     'transactionHash' => $order_code,
-                    'status' => 'WAIT'
+                    'status' => 'DONE'
                 ]);
 
                 return response()->json(['message' => 'Register Fund successfully!'], 201);

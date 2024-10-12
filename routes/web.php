@@ -103,13 +103,16 @@ Route::controller(UserManageController::class)->middleware('auth')->group(functi
     Route::match(['get', 'post'],'/customer-detail/{id}', 'showCustomerDetail')->name('showCustomerDetail')->middleware('level:0');
     Route::post('/creatConnection', 'creatConnection')->name('creatConnection')->middleware('level:0');
     Route::post('/deleteConnection/{id}/delete', 'deleteConnection')->name('deleteConnection')->middleware('level:0');
-
+    Route::get('/commissionmlm', 'showCommissionMLM')->name('showCommissionMLM')->middleware('level:0');
+    Route::post('/calculate-mlm', 'calculateMLM')->name('calculateMLM')->middleware('level:0')->middleware('level:0');;
 });
 
 //Deposit Management Controller
 Route::controller(DepositManageController::class)->middleware('auth')->group(function() {
     Route::get('/campaignTransaction', 'showCampaignList')->name('showCampaignList')->middleware('level:0');
     Route::match(['get', 'post'], '/campaignTransaction/{id}/deposit-detail', 'depositDetail')->name('depositDetail')->middleware('level:0');
+    Route::match(['get', 'post'], '/campaignTransaction/{id}/register-fund', 'registerFund')->name('registerFund')->middleware('level:0');
+    Route::post('/registerFundByID', 'registerFundByID')->name('registerFundByID')->middleware('level:0');
     Route::get('/depositWait', 'showDepositWait')->name('showDepositWait')->middleware('level:0');
     Route::get('/depositDone', 'showDepositDone')->name('showDepositDone')->middleware('level:0');
     Route::get('/depositProcess', 'showDepositProcess')->name('showDepositProcess')->middleware('level:0');

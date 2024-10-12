@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use App\Models\WalletTadaup;
 use App\Models\CustomerItem;
-
+use Illuminate\Support\Facades\DB;
 
 
 class DepositManageController extends Controller
@@ -77,6 +77,105 @@ class DepositManageController extends Controller
             ->withErrors('Get All Campaign Fail.' + e);
         }
     }
+
+    public function registerFund($campainID)
+    {
+        try{
+            $CampainFX_ID = CampainFX::findOrFail($campainID);
+            $customers = Customer::getAll();
+            $data = compact('CampainFX_ID', 'customers');
+            return view('depositManage.registerfund', $data);
+        }
+        catch (e){
+            return redirect()->route('campaignTransaction')
+            ->withErrors('Get Campaign ' .$campainID. 'Fail.' + e);
+        }
+    }
+
+    public function registerFundByID(Request $request)
+    {
+        try {
+            // Assuming you have the user's ID from authentication context
+            $customer_id = $request->customer_id;
+            if(!$customer_id){
+                return back()->withErrors(['customer_id' => 'Please select Fullname']);
+            }
+            if(!$request->amount){
+                return back()->withErrors(['amount' => 'Please select Amount']);
+            }
+
+            DB::transaction(function () use ($request) {
+                // Create a new order code for deposit
+                $order_code = 'ORD' . Str::uuid()->toString();
+
+                // Store transaction temporarily
+                $transaction_Temp = Transaction_Temp::create([
+                    'user_id' => $request->customer_id,
+                    'type' => 'WITHDRAW',
+                    'amount' => $request->amount,
+                    'currency' => 'USD',
+                    'eWallet' => '1',
+                    'transactionHash' => $order_code ?? null,
+                    'status' => 'DONE',
+                ]);
+
+                // Retrieve and update customer item for type = 1
+                $customerItemType1 = CustomerItem::where('customer_id', $request->customer_id)
+                    ->where('type', 1)
+                    ->firstOrFail();
+
+                // Check if the customer has enough funds
+                if ((double)$customerItemType1->value < (double)$request->amount) {
+                    // Throw an exception if funds are insufficient
+                    throw new \Exception('Insufficient funds for customer ' . $request->customer_id);
+                }
+
+                // Decrement the value for type = 1
+                $customerItemType1->update([
+                    'value' => (double) $customerItemType1->value - (double) $request->amount
+                ]);
+
+                // Retrieve and update customer item for type = 2
+                $customerItemType2 = CustomerItem::where('customer_id', $request->customer_id)
+                    ->where('type', 2)
+                    ->firstOrFail();
+
+                // Increment the value for type = 2
+                $customerItemType2->update([
+                    'value' => (double) $customerItemType2->value + (double) $request->amount
+                ]);
+
+                // Create a new campaign transaction
+                CampainFX_Txn::create([
+                    'campainID' => $request->campaign_id,
+                    'customerID' => $request->customer_id,
+                    'ewalletCustomerID' => $request->ewallet ?? null,
+                    'txnType' => 'DEPOSIT',
+                    'amount' => $request->amount,
+                    'txnDescription' => $request->description ?? null,
+                    'transactionHash' => $order_code ?? null,
+                    'status' => 'DONE'
+                ]);
+            });
+
+            return redirect()->route('showDepositDone', $request->customer_id)
+                ->withSuccess('Register fund for ' . $request->customer_id . ' successfully.');
+        } 
+        catch (QueryException $qe) {
+            // Log the detailed SQL error for developers
+            Log::error('SQL error occurred: ' . $qe->getMessage());
+    
+            // Return a generic error message to the user
+            return redirect()->back()->withErrors('There was an issue processing your request. Please try again later.');
+        } catch (\Exception $e) {
+            // Log the error for debugging purposes
+            Log::error('Error occurred while registering fund: ' . $e->getMessage());
+    
+            // Return a user-friendly error message
+            return redirect()->back()->withErrors('An error occurred while processing your request. Please check your input and try again.');
+        }
+    }
+
 
     public function showDepositWait()
     {

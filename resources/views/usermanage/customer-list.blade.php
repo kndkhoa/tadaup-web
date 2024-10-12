@@ -37,8 +37,11 @@
           <table class="table table-striped projects">
               <thead>
                   <tr>
+                    <th>
+                      No
+                      </th>
                       <th>
-                      ID
+                      Customer ID
                       </th>
                       <th>
                         Customer Name
@@ -58,8 +61,16 @@
                   </tr>
               </thead>
               <tbody>
+                @php $i = 0
+                @endphp
               @foreach($customers as $customer)
+                  @php
+                    $i = $i + 1
+                  @endphp
                   <tr>
+                      <td>
+                        {{$i}}
+                      </td>
                       <td>
                         {{$customer->customer_id}}
                       </td>

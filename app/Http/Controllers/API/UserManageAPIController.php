@@ -121,6 +121,10 @@ class UserManageAPIController extends Controller
                     'customer_id' => $request->telegramid,
                     'type' => '5',
                     'value' =>  '0'
+                ],[
+                    'customer_id' => $request->telegramid,
+                    'type' => '6',
+                    'value' =>  '0'
                 ]
                 ];
                 foreach ($items as $item) {

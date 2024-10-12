@@ -95,9 +95,9 @@
                               </td>
                               <td>{{$campain['created_at']}}</td>
                               <td class="project-actions text-right">
-                                  <form action="{{ route('depositDetail', $campain['campainID']) }}" method="POST" style="display: inline;">
+                                  <form action="{{ route('registerFund', $campain['campainID']) }}" method="POST" style="display: inline;">
                                       @csrf
-                                      <input type="submit" value="View" class="btn btn-primary btn-sm">
+                                      <input type="submit" value="Register Fund" class="btn btn-primary btn-sm">
                                   </form>
                               </td>
                           </tr>

@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\WalletTadaup;
 use Illuminate\Support\Facades\Http;  // Laravel's HTTP client
 use App\Models\Transaction_Temp;
-
+use App\Models\CustomerItem;
 
 
 class UserManageController extends Controller
@@ -181,7 +181,115 @@ class UserManageController extends Controller
         }
     }
 
-    
+    //==============Share Commission MLML===================//
+    public function showCommissionMLM()
+    {
+        try{
+            $customers = Customer::getAll();
+            $transaction_temp_mlm = Transaction_Temp::where('origPerson', 'MLM')
+                                        ->orderBy('created_at', 'desc') // Order by created_at in descending order
+                                        ->take(20) // Limit the results to 20
+                                        ->join('customers', 'transactions_temp.user_id', '=', 'customers.user_id')
+                                        ->select('transactions_temp.*', 'customers.full_name as customer_name') 
+                                        ->get();
+            $data = compact('customers', 'transaction_temp_mlm');
+            return view('usermanage.commission-mlm', $data);
+        }
+        catch (e){
+            return redirect()->route('showCustomerList')
+            ->withErrors('Show Commission Fail.' + e);
+        }
+    }
+
+    public function calculateMLM(Request $request)
+    {
+        // Assuming you have the user's ID from authentication context
+        $customer_id = $request->customer_id;
+        if(!$customer_id){
+            return back()->withErrors(['user_id' => 'Please select Fullname']);
+        }
+        if(!$request->amount){
+            return back()->withErrors(['amount' => 'Please select amount']);
+        }
+
+        // Get top-level customers for the user (those without a parent)
+        $customers = Customer::where('user_id', $customer_id)
+                             ->get();
+        $user_sponser_id =  $customers[0]->user_sponser_id;
+        $collection = collect($customers);
+        $i = 1;
+        while ($i < 5){
+            
+            $customersParent = Customer::where('user_id', $user_sponser_id)
+                             ->get();
+            if($customersParent->isEmpty()){
+                break;
+            }
+            $user_sponser_id =  $customersParent[0]->user_sponser_id;
+            $collection->push($customersParent[0]);
+            $i++;
+        }
+        self::calComission($collection->all(),$request);
+        return redirect()->route('showCommissionMLM')
+            ->with('success','You have successfully calculate commmission!');
+    }
+
+    public function calComission($collections, $request)
+    {
+        $amount = $request->amount;
+        $levels = [0.50, 0.30, 0.10, 0.05, 0.05];
+        $i =0; 
+        $count = count($collections);
+        foreach ($collections as $collection) {
+            // Check if 'user_id' exists in the collection array
+            if (isset($collection['user_id'])) {
+                $userId = $collection['user_id'];
+                $amountCommission = $amount * $levels[$i];
+                $this->createTransaction($userId, round($amountCommission, 2), $request);
+                $i ++;
+            } else {
+                // Handle the case where 'user_id' is not set
+                error_log('User ID not found in collection');
+                // Optionally, continue to the next iteration or implement additional error handling
+            }
+        }
+        while($i < 5){
+            $amountCommission = $amount * $levels[$i];
+            $this->createTransaction('1', round($amountCommission, 2), $request);
+            $i++;
+        }
+    }
+
+     // Store transaction temporarily
+    private function createTransaction($userId, $amount, $request)
+    {
+        DB::transaction(function () use ($userId, $amount, $request) {
+            $order_code = 'ORD' . Str::uuid()->toString();
+
+            $customerItemType6 = CustomerItem::where('customer_id', $userId)
+                        ->where('type', 6)
+                        ->firstOrFail(); 
+
+            // Increment the value for type = 2
+            $customerItemType6->update([
+                'value' => (double) $customerItemType6->value + (double) $amount
+            ]);
+
+            Transaction_Temp::create([
+                'user_id' => $userId,
+                'type' => 'DEPOSIT',
+                'amount' => $amount,
+                'currency' => 'USDT',
+                'transactionHash' => $order_code,
+                'status' => 'DONE',
+                'eWallet' => '6',
+                'description' => 'Share Commission MLM from customer ID: ' .$request->customer_id,
+                'origPerson' => 'MLM'
+            ]);
+
+
+        });
+    }
   
 
 }
