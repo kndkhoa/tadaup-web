@@ -95,6 +95,23 @@ class UserManageController extends Controller
         }
     }
 
+    public function depositWalletTadaIncome(Request $request)
+    {
+        try{
+            if(!$request->amount){
+                return back()->withErrors(['amount' => 'Please fill amount']);
+            }
+            $wallet_tada =  WalletTadaup::where('walletName', 'INCOME')
+                        ->where('id', 1)->first();
+            $wallet_tada->increment('value', (double) $request->amount);
+            return redirect()->back()->with('success', 'Deposit amount to wallet Income successfully.');
+            
+        }
+        catch (e){
+            return redirect()->back()->withErrors('Deposit amount to wallet Incomefail.');
+        }
+    }
+
     public function showCustomerDetail($cutomerID)
     {
         try{
@@ -106,11 +123,20 @@ class UserManageController extends Controller
                             ->select('cutomer_connection.*', 'customers.full_name as customer_name', 'customers.phone as phone') 
                             ->get();
 
+            $customer_items = CustomerItem::where('customer_id', $cutomerID)
+                            ->join('item', 'customer_item.type', '=', 'item.id')
+                            ->select('customer_item.*', 'item.description as description') 
+                            ->get();
+
             $campainFX_Txns = CampainFX_Txn::where('customerID', $cutomerID)
                             ->where('status', 'WAIT')
                             ->where('txnType', 'DEPOSIT')
                             ->whereNotNull('transactionHash')
                             ->get();
+                
+            $transaction_temps = transaction_temp::where('user_id', $cutomerID)
+                                                ->orderBy('created_at', 'desc')
+                                                ->get(); 
             //Tree view
             $userTree = Customer::with('children')->find($cutomerID);
             if (!$userTree) {
@@ -118,7 +144,7 @@ class UserManageController extends Controller
             }
             $tree = $this->buildTree($userTree);
 
-            $data = compact('Customer_connection', 'customerByID', 'tree', 'campainFX_Txns');
+            $data = compact('Customer_connection', 'customerByID', 'tree', 'campainFX_Txns', 'customer_items', 'transaction_temps');
             return view('usermanage.customer-detail', $data);
         }
         catch (e){

@@ -22,8 +22,9 @@ class WithdrawManageAPIController extends Controller
             $validator = Validator::make($request->all(), [
                 'customer_id' => 'required|string|min:1',
                 'amount' => 'required|string|max:255',
-                //'eWallet' => 'required|string|max:500',
+                'eWallet' => 'required|string|max:500',
                // 'description' => 'required|string|max:500',
+               // 'currency' => 'required|string|max:500',
             ]);
 
             if ($validator->fails()) {
@@ -31,7 +32,16 @@ class WithdrawManageAPIController extends Controller
             }
 
             $order_code = 'ORD' . Str::uuid()->toString();
-            $customerByID = Customer::find($request->input('customer_id'));
+            $customerByID = Customer::find($request->customer_id);
+            // Retrieve and update customer item for type = 1
+            $customerItemType1 = CustomerItem::where('customer_id', $request->customer_id)
+                                    ->where('type', 1)
+                                    ->firstOrFail();  // Throws exception if not found
+
+            if ((double)$customerItemType1->value < (double)$request->amount) {
+                return response()->json(['error' => 'Insufficient funds.'], 500);
+            }
+
             // Create a new order
             $transaction_temp = transaction_temp::create([
                 'user_id' => $request->customer_id,

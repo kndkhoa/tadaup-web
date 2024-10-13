@@ -100,6 +100,7 @@ Route::controller(UserManageController::class)->middleware('auth')->group(functi
     Route::get('/wallettada-list', 'showWalletTada')->name('showWalletTada')->middleware('level:0');
     Route::get('/wallettada-history', 'showWalletTadaHistory')->name('showWalletTadaHistory')->middleware('level:0');
     Route::post('/calculate-point', 'calculatePoint')->name('calculatePoint')->middleware('level:0');
+    Route::post('/deposit-income', 'depositWalletTadaIncome')->name('depositWalletTadaIncome')->middleware('level:0');
     Route::match(['get', 'post'],'/customer-detail/{id}', 'showCustomerDetail')->name('showCustomerDetail')->middleware('level:0');
     Route::post('/creatConnection', 'creatConnection')->name('creatConnection')->middleware('level:0');
     Route::post('/deleteConnection/{id}/delete', 'deleteConnection')->name('deleteConnection')->middleware('level:0');
@@ -123,6 +124,7 @@ Route::controller(DepositManageController::class)->middleware('auth')->group(fun
     Route::post('/campaignTransaction/{id}/reject', 'depositReject')->name('depositReject')->middleware('level:0');  
     Route::post('/campaignTransaction/{id}/process', 'depositProcess')->name('depositProcess')->middleware('level:0');  
     Route::post('/campaignTransaction/{id}/win', 'depositWin')->name('depositWin')->middleware('level:0');  
+    Route::post('/campaignTransaction/{id}/depositIncome', 'depositIncome')->name('depositIncome')->middleware('level:0');  
 });
 
 //Withdraw Management Controller

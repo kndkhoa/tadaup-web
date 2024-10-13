@@ -441,4 +441,57 @@ class DepositManageController extends Controller
         }
     }
 
+    public function depositIncome(Request $request, $customerID)
+    {
+        try{
+
+            if(!$request->amount){
+                return back()->withErrors(['amount' => 'Please fill amount']);
+            }
+            $order_code = 'ORD' . Str::uuid()->toString();
+            $user_id = Auth::user()->user_id;
+            $customer = Customer::find($user_id);
+            
+            $customerItemType1 = CustomerItem::where('customer_id', $customerID)
+                    ->where('type', 1)
+                    ->firstOrFail()
+                    ->increment('value', (double) $request->amount);
+
+            Transaction_Temp::create([
+                'user_id' => $customerID,
+                'type' => 'DEPOSIT',
+                'amount' => $request->amount,
+                'currency' => 'USDT',
+                'transactionHash' => $order_code,
+                'status' => 'DONE',
+                'eWallet' => '1',
+                'description' => 'Deposit income from FUND',
+                'origPerson' => $customer->full_name
+            ]);
+            return redirect()->back()->with('success', 'Deposit amount to wallet successfully.');
+            
+        }
+        catch (e){
+            return redirect()->back()->withErrors('Deposit amount to wallet Incomefail.');
+        }
+    }
+
+    public function showHisDepositIncome()
+    {
+        try{
+            $transaction_temp_mlm = Transaction_Temp::where('origPerson', 'MLM')
+                                        ->orderBy('created_at', 'desc') // Order by created_at in descending order
+                                        ->take(10) // Limit the results to 20
+                                        ->join('customers', 'transactions_temp.user_id', '=', 'customers.user_id')
+                                        ->select('transactions_temp.*', 'customers.full_name as customer_name') 
+                                        ->get();
+            $data = compact('transaction_temp_mlm');
+            return view('usermanage.commission-mlm', $data);
+        }
+        catch (e){
+            return redirect()->route('showCustomerList')
+            ->withErrors('Show Commission Fail.' + e);
+        }
+    }
+
 }

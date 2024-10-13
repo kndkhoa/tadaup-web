@@ -26,8 +26,8 @@
       
       <!-- title row -->
       <!-- info row -->
-      <div class="card card-solid">
-        <div class="card-body pb-0">
+      <div class="row invoice-info">
+        <div class="col-sm-4 invoice-col">
           <address>
           <b>FullName:</b> {{$customerByID->full_name}}<br>
           <b>Address:</b> {{$customerByID->address}}<br>
@@ -41,12 +41,15 @@
           <b>Bank Account:</b> {{$customerByID->bank_account}}<br>
           <b>Bank Name:</b> {{$customerByID->bank_name}}<br>
           <b>User_Sponser_ID:</b> {{$customerByID->user_sponser_id}}<br>
+          <b>Ewallet Address:</b> {{$customerByID->ewalletAddress}}<br>
+          <b>Ewallet Network:</b> {{$customerByID->ewalletNetwork}}<br>
           </address>
         </div>
         <!-- /.col -->
         <div class="col-sm-4 invoice-col">
-          <b>Ewallet Address:</b> {{$customerByID->ewalletAddress}}<br>
-          <b>Ewallet Network:</b> {{$customerByID->ewalletNetwork}}<br>
+          @foreach($customer_items as $customer_item)
+            <b>{{$customer_item->description}}:</b> {{$customer_item->value}}<br>
+          @endforeach
         </div>
         <!-- /.col -->
       </div>
@@ -92,6 +95,84 @@
         </div>
         
         <!-- /.card-footer -->
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Transaction History</h3>
+
+          <div class="card-tools">
+            <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
+              <i class="fas fa-minus"></i>
+            </button>
+          </div>
+        </div>
+        <div class="card-body p-0">
+          <table class="table table-striped projects">
+              <thead>
+                  <tr>
+                    <th>
+                      No
+                      </th>
+                      <th>
+                        Type
+                      </th>
+                      <th>
+                        Amount
+                      </th>
+                      <th>
+                        Currency
+                      </th>
+                      <th>
+                          Ewallet
+                      </th>
+                      <th>
+                          Description
+                      </th>
+                      <th>
+                          Status
+                      </th>
+                      <th>
+                          OrigPerson
+                      </th>
+                  </tr>
+              </thead>
+              <tbody>
+                @php $i = 0
+                @endphp
+              @foreach($transaction_temps as $transaction_temp)
+                  @php
+                    $i = $i + 1
+                  @endphp
+                  <tr>
+                      <td>
+                        {{$i}}
+                      </td>
+                      <td>
+                        {{$transaction_temp->type}}
+                      </td>
+                      <td>
+                        {{$transaction_temp->amount}}
+                      </td>
+                      <td>
+                        {{$transaction_temp->currency}}
+                      </td>
+                      <td>
+                        {{$transaction_temp->eWallet}}
+                      </td>
+                      <td>
+                        {{$transaction_temp->description}}
+                      </td>
+                      <td>
+                        {{$transaction_temp->status}}
+                      </td>
+                      <td>{{$transaction_temp->origPerson}}</td>
+                  </tr>
+                  @endforeach
+              </tbody>
+          </table>
+        </div>
+        <!-- /.card-body -->
       </div>
 
 

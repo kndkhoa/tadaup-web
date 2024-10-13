@@ -37,7 +37,20 @@
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                @endif
+              @endif
+
+              @if($errors->any())
+                  <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                      <ul>
+                          @foreach($errors->all() as $error)
+                              <li>{{ $error }}</li>
+                          @endforeach
+                      </ul>
+                      <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                          <span aria-hidden="true">&times;</span>
+                      </button>
+                  </div>
+              @endif
               <!-- Table row -->
               <div class="row">
                 <div class="col-12 table-responsive">
@@ -58,7 +71,7 @@
                       <th>Amount</th>
                       <th>Orig Person</th>
                       <th>Status</th>
-                      <th>Create_At</th>
+                      <th>Create_At</th><th>Deposit Amount</th>
                     </tr>
                     </thead>
                     <tbody>          
@@ -71,7 +84,13 @@
                       <td>{{$transaction_temp['origPerson']}}</td>
                       <td>{{$transaction_temp['status']}}</td>
                       <td>{{$transaction_temp['created_at']}}</td>
-                        
+                      <td>
+                        <form action="{{ route('depositIncome' , $transaction_temp->customerID ) }}" method="POST" style="display: inline;">
+                            @csrf
+                            <input type="number" id="amount" class="form-control" name="amount" step="any" min="0" style="width: 100px;">
+                            <input type="submit" value="Deposit" class="btn btn-primary btn-sm">
+                       </form>
+                      </td>
                        
                     </tr>     
                     @endforeach
@@ -89,6 +108,7 @@
              
             </div>
             <!-- /.invoice -->
+
           </div><!-- /.col -->
         </div><!-- /.row -->
       </div><!-- /.container-fluid -->

@@ -59,6 +59,7 @@ class DepositManageAPIController extends Controller
                     'eWallet' => $request->ewallet,
                     'transactionHash' => $request->transactionHash,
                     'status' => 'WAIT',
+                    'origPerson' => $request->customer_id,
                 ]);
 
                 $check = $this->checkTransactionByHash($request->transactionHash);
@@ -116,6 +117,7 @@ class DepositManageAPIController extends Controller
                     'eWallet' => '3',
                     'transactionHash' => $order_code,
                     'status' => 'DONE',
+                    'origPerson' => 'Training',
                 ]);
 
                 // Increment the value for the customer item with type = 1
@@ -139,7 +141,7 @@ class DepositManageAPIController extends Controller
                     'user_id' => $request->customer_id,
                     'type' => 'WITHDRAW',
                     'amount' => $request->amount,
-                    'currency' => 'USD',
+                    'currency' => 'USDT',
                     'eWallet' => '1',
                     'transactionHash' => $order_code,
                     'status' => 'DONE',
@@ -180,7 +182,8 @@ class DepositManageAPIController extends Controller
                     'amount' => $request->amount,
                     'txnDescription' => $request->description,
                     'transactionHash' => $order_code,
-                    'status' => 'DONE'
+                    'status' => 'DONE',
+                    'origPerson' => 'ANAN',
                 ]);
 
                 return response()->json(['message' => 'Register Fund successfully!'], 201);
