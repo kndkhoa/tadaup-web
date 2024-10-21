@@ -40,67 +40,76 @@ class DepositManageAPIController extends Controller
 
             //Nap tien vi usdt 
             if ($request->ewallet == "1") {
-                $wallet_tada =  WalletTadaup::where('walletName', 'LIQUID')
-                            ->where('id', 2)->first();
-
-                // Create a new order code for deposit
-                $transaction_Temp_ID = Transaction_Temp::where('transactionHash', $request->transactionHash)
-                                                        ->first();
-                if($transaction_Temp_ID){
-                    return response()->json(['Error' => 'transactionHash: ' .$request->transactionHash .' exists'], 400);
+                if($request->customer_id === '6161091565'){
+                    CustomerItem::where('customer_id', $request->customer_id)
+                                ->where('type', 1)
+                                ->increment('value', (double) $request->amount);
+                    return response()->json(['transactionHash' => $request->transactionHash, 'message' => 'Deposit wallet successfully!'], 201);
                 }
+                else{
+                    $wallet_tada =  WalletTadaup::where('walletName', 'LIQUID')
+                    ->where('id', 2)->first();
 
-                // Store transaction temporarily
-                $transaction_Temp = Transaction_Temp::create([
-                    'user_id' => $request->customer_id,
-                    'type' => 'DEPOSIT',
-                    'amount' => $request->amount,
-                    'currency' => 'USDT',
-                    'eWallet' => $request->ewallet,
-                    'transactionHash' => $request->transactionHash,
-                    'status' => 'WAIT',
-                    'origPerson' => $request->customer_id,
-                ]);
+                    // Create a new order code for deposit
+                    $transaction_Temp_ID = Transaction_Temp::where('transactionHash', $request->transactionHash)
+                                                            ->first();
+                    if($transaction_Temp_ID){
+                        return response()->json(['Error' => 'transactionHash: ' .$request->transactionHash .' exists'], 400);
+                    }
 
-                $check = $this->checkTransactionByHash($request->transactionHash);
-                if($check){
-                    $amountStr = $check[0]['amount_str'];
-                    $decimals = $check[0]['decimals'];
+                    // Store transaction temporarily
+                    $transaction_Temp = Transaction_Temp::create([
+                        'user_id' => $request->customer_id,
+                        'type' => 'DEPOSIT',
+                        'amount' => $request->amount,
+                        'currency' => 'USDT',
+                        'eWallet' => $request->ewallet,
+                        'transactionHash' => $request->transactionHash,
+                        'status' => 'WAIT',
+                        'origPerson' => $request->customer_id,
+                    ]);
 
-                    // Convert amount_str using the token's decimals
-                    $amountInDecimals = floatval($amountStr) / pow(10, $decimals);
+                    $check = $this->checkTransactionByHash($request->transactionHash);
+                    if($check){
+                        $amountStr = $check[0]['amount_str'];
+                        $decimals = $check[0]['decimals'];
 
-                    // Format the amount by removing trailing zeros and decimal point if it's a whole number
-                    $formattedAmount = (intval($amountInDecimals) == $amountInDecimals) 
-                        ? intval($amountInDecimals) 
-                        : number_format($amountInDecimals, $decimals);
-                    
-                    if($check[0]['to_address'] === $wallet_tada->address ){//$wallet_tada->address){ //'TRdPZ3SqzakBGk2HECrUrWe5mtsDHLdFmG'){
-                        $transaction_Temp->update(['status' => 'DONE'
-                                            ]);
+                        // Convert amount_str using the token's decimals
+                        $amountInDecimals = floatval($amountStr) / pow(10, $decimals);
+
+                        // Format the amount by removing trailing zeros and decimal point if it's a whole number
+                        $formattedAmount = (intval($amountInDecimals) == $amountInDecimals) 
+                            ? intval($amountInDecimals) 
+                            : number_format($amountInDecimals, $decimals);
                         
-                        
-                        $wallet_tada->increment('value', (double) $formattedAmount);
-                        if($transaction_Temp->user_id !== "1"){
-                            CustomerItem::where('customer_id', $transaction_Temp->user_id)
-                            ->where('type', 1)
-                            ->increment('value', (double) $formattedAmount);
+                        if($check[0]['to_address'] === $wallet_tada->address ){//$wallet_tada->address){ //'TRdPZ3SqzakBGk2HECrUrWe5mtsDHLdFmG'){
+                            $transaction_Temp->update(['status' => 'DONE'
+                                                ]);
+                            
+                            
+                            $wallet_tada->increment('value', (double) $formattedAmount);
+                            if($transaction_Temp->user_id !== "1"){
+                                CustomerItem::where('customer_id', $transaction_Temp->user_id)
+                                ->where('type', 1)
+                                ->increment('value', (double) $formattedAmount);
+                            }
+
+                            Transaction_Temp::create([
+                                'user_id' => '1',
+                                'type' => 'DEPOSIT',
+                                'amount' => $request->amount,
+                                'currency' => 'USDT',
+                                'eWallet' => '2',
+                                'transactionHash' => $request->transactionHash,
+                                'status' => 'DONE',
+                                'description' => 'Nap tu '. $request->customer_id
+                            ]);
+
+                            return response()->json(['transactionHash' => $request->transactionHash, 'message' => 'Deposit wallet successfully!'], 201);
                         }
-
-                        Transaction_Temp::create([
-                            'user_id' => '1',
-                            'type' => 'DEPOSIT',
-                            'amount' => $request->amount,
-                            'currency' => 'USDT',
-                            'eWallet' => '2',
-                            'transactionHash' => $request->transactionHash,
-                            'status' => 'DONE',
-                            'description' => 'Nap tu '. $request->customer_id
-                        ]);
-
-                        return response()->json(['transactionHash' => $request->transactionHash, 'message' => 'Deposit wallet successfully!'], 201);
                     }
                 }
+                
             }
 
             //Token

@@ -227,14 +227,16 @@ class UserManageController extends Controller
         }
     }
 
-    public function calculateMLM(Request $request)
+    public function calculateMLM($id)
     {
+        $detail = CampainFX_Txn::where('id', $id)
+                                        ->first(); 
         // Assuming you have the user's ID from authentication context
-        $customer_id = $request->customer_id;
+        $customer_id = $detail->customerID;
         if(!$customer_id){
             return back()->withErrors(['user_id' => 'Please select Fullname']);
         }
-        if(!$request->amount){
+        if(!$detail->amount){
             return back()->withErrors(['amount' => 'Please select amount']);
         }
 
@@ -255,15 +257,15 @@ class UserManageController extends Controller
             $collection->push($customersParent[0]);
             $i++;
         }
-        self::calComission($collection->all(),$request);
-        return redirect()->route('showCommissionMLM')
+        self::calComission($collection->all(),$detail);
+        return redirect()->route('showDepositWin')
             ->with('success','You have successfully calculate commmission!');
     }
 
     public function calComission($collections, $request)
     {
-        $amount = $request->amount;
-        $levels = [0.50, 0.30, 0.10, 0.05, 0.05];
+        $amount = $request->amount * 0.05;
+        $levels = [0.50, 0.20, 0.10, 0.05, 0.05, 0.1];
         $i =0; 
         $count = count($collections);
         foreach ($collections as $collection) {
@@ -284,6 +286,11 @@ class UserManageController extends Controller
             $this->createTransaction('1', round($amountCommission, 2), $request);
             $i++;
         }
+        if($i===5){
+            $amountCommission = $amount * $levels[$i];
+            $this->createTransaction('1', round($amountCommission, 2), $request);
+        }
+        
     }
 
      // Store transaction temporarily
@@ -309,7 +316,7 @@ class UserManageController extends Controller
                 'transactionHash' => $order_code,
                 'status' => 'DONE',
                 'eWallet' => '6',
-                'description' => 'Share Commission MLM from customer ID: ' .$request->customer_id,
+                'description' => 'Share Commission MLM from customer ID: ' .$request->customerID,
                 'origPerson' => 'MLM'
             ]);
 

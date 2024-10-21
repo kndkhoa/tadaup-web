@@ -71,7 +71,9 @@
                       <th>Amount</th>
                       <th>Orig Person</th>
                       <th>Status</th>
-                      <th>Create_At</th><th>Deposit Amount</th>
+                      <th>Updated</th>
+                      <th>Interest Amount</th>
+                      <th>Share MLM</th>
                     </tr>
                     </thead>
                     <tbody>          
@@ -83,12 +85,18 @@
                       <td>{{$transaction_temp['amount']}}</td>
                       <td>{{$transaction_temp['origPerson']}}</td>
                       <td>{{$transaction_temp['status']}}</td>
-                      <td>{{$transaction_temp['created_at']}}</td>
+                      <td>{{$transaction_temp['updated_at']}}</td>
                       <td>
                         <form action="{{ route('depositIncome' , $transaction_temp->customerID ) }}" method="POST" style="display: inline;">
                             @csrf
                             <input type="number" id="amount" class="form-control" name="amount" step="any" min="0" style="width: 100px;">
                             <input type="submit" value="Deposit" class="btn btn-primary btn-sm">
+                       </form>
+                      </td>
+                      <td>
+                        <form action="{{ route('calculateMLM' , $transaction_temp->id ) }}" method="POST" style="display: inline;">
+                            @csrf
+                            <input type="submit" value="Share MLM" class="btn btn-primary btn-sm">
                        </form>
                       </td>
                        

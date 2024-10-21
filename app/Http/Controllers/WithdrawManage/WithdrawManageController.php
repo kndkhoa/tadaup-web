@@ -52,7 +52,7 @@ class WithdrawManageController extends Controller
         return view('withdrawManage.withdrawhistory', compact(['transactions_temp']));
     }
 
-    public function approve($id)
+    public function approve($id, Request $request)
     {
         try {
             $user_id = Auth::user()->user_id;
@@ -72,7 +72,8 @@ class WithdrawManageController extends Controller
             // Update the transaction status and set the originating person
             $transaction_temp->update([
                 'status' => $desired_status,
-                'origPerson' => $customer->full_name
+                'origPerson' => $customer->full_name,
+                'transactionHash' => $request->hash
             ]);
 
             // If you need to record the transaction, uncomment and implement the method
@@ -85,7 +86,7 @@ class WithdrawManageController extends Controller
         }
     }
 
-    public function reject($id)
+    public function reject($id, Request $request)
     {
         try{
             $user_id = Auth::user()->user_id;
@@ -101,7 +102,8 @@ class WithdrawManageController extends Controller
             // Update the transaction status and set the originating person
             $transaction_temp->update([
                 'status' => $desired_status,
-                'origPerson' => $customer->full_name
+                'origPerson' => $customer->full_name,
+                'errorMsg' => $request->reject
             ]);
             
             return redirect()->back()->with('success', 'Transaction status reject updated successfully.');

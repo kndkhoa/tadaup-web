@@ -54,8 +54,9 @@
                     <tr>
                       <th>Customer ID</th>
                       <th>Customer Name</th>
-                      <th>Type</th>
                       <th>Amount</th>
+                      <th>Currency</th>
+                      <th>Hash</th>
                       <th>eWallet</th>
                       <th>Orig Person</th>
                       <th>Status</th>
@@ -68,8 +69,9 @@
                     <tr>
                       <td>{{$transaction_temp['user_id']}}</td>
                       <td>{{$transaction_temp['customer_name']}}</td>
-                      <td>{{$transaction_temp['type']}}</td>
                       <td>{{$transaction_temp['amount']}}</td>
+                      <td>{{$transaction_temp['currency']}}</td>
+                      <td>{{$transaction_temp['transactionHash'] ?? null}}</td>
                       <td>{{$transaction_temp['eWallet']}}</td>
                       <td>{{$transaction_temp['origPerson']}}</td>
                       <td>{{$transaction_temp['status']}}</td>

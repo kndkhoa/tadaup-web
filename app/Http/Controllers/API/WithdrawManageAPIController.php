@@ -10,6 +10,9 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
+use App\Models\CustomerItem;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 
 
 class WithdrawManageAPIController extends Controller
@@ -24,83 +27,159 @@ class WithdrawManageAPIController extends Controller
                 'amount' => 'required|string|max:255',
                 'eWallet' => 'required|string|max:500',
                // 'description' => 'required|string|max:500',
-               // 'currency' => 'required|string|max:500',
+                'currency' => 'required|string|max:500',
             ]);
 
             if ($validator->fails()) {
                 return response()->json(['errors' => $validator->errors()], 422);
             }
-
-            $order_code = 'ORD' . Str::uuid()->toString();
-            $customerByID = Customer::find($request->customer_id);
-            // Retrieve and update customer item for type = 1
-            $customerItemType1 = CustomerItem::where('customer_id', $request->customer_id)
-                                    ->where('type', 1)
-                                    ->firstOrFail();  // Throws exception if not found
-
-            if ((double)$customerItemType1->value < (double)$request->amount) {
-                return response()->json(['error' => 'Insufficient funds.'], 500);
+            if($request->currency === 'USDT'){
+                //$customerByID = Customer::find($request->customer_id);
+                // Retrieve and update customer item for type = 1
+                $customerItemType1 = CustomerItem::where('customer_id', $request->customer_id)
+                                        ->where('type', 1)
+                                        ->firstOrFail();  // Throws exception if not found
+    
+                if ((double)$customerItemType1->value < (double)$request->amount) {
+                    return response()->json(['error' => 'Insufficient funds.'], 500);
+                }
+    
+                // Create a new order
+                $transaction_temp = transaction_temp::create([
+                    'user_id' => $request->customer_id,
+                    'type' => 'WITHDRAW',
+                    'amount' => $request->amount,
+                    'currency' => $request->currency ?? null,
+                    'eWallet' => $request->eWallet ?? null, 
+                    'description' => $request->description ?? null,
+                    'status' => 'WAIT'
+                ]);
+                return response()->json(['message' => 'Withdraw created successfully!'], 201);
             }
+            else if($request->currency === 'VND'){
+                
+                 // Retrieve and update customer item for type = 1
+                 $customerItemType1 = CustomerItem::where('customer_id', $request->customer_id)
+                    ->where('type', 1)
+                    ->firstOrFail();  // Throws exception if not found
 
-            // Create a new order
-            $transaction_temp = transaction_temp::create([
-                'user_id' => $request->customer_id,
-                'type' => 'WITHDRAW',
-                'amount' => $request->amount,
-                'currency' => 'USD',
-                'eWallet' => $request->eWallet ?? null, 
-                'transactionHash' => $order_code ?? null,
-                'description' => $request->description ?? null,
-                'status' => 'WAIT'
+                if ((double)$customerItemType1->value < (double)$request->amount) {
+                    return response()->json(['error' => 'Insufficient funds.'], 500);
+                }
 
-            ]);
+                DB::transaction(function () use ($request) {
+                    $order_code = 'ORD' . Str::uuid()->toString();
+                    //Amount VND
+                    $amount = (double)$request->amount * 26000;
 
-            return response()->json(['order' => $order_code, 'message' => 'Withdraw created successfully!'], 201);
+                    // Create a new order
+                    $transaction_temp = transaction_temp::create([
+                        'user_id' => $request->customer_id,
+                        'type' => 'WITHDRAW',
+                        'amount' => $amount,
+                        'currency' => $request->currency ?? null,
+                        'eWallet' => $request->eWallet ?? null, 
+                        'description' => $request->description ?? null,
+                        'transactionHash' => $order_code,
+                        'status' => 'WAIT',
+                        'bank_account' => $request->bank_account ?? null,
+                        'bank_name'=> $request->bank_name ?? null,
+                        'bank_city'=> $request->bank_code ?? null,
+                        'fullname' => $request->fullname ?? null,
+                    ]);
+                    $response = $this->withdrawAmountByGateway(env('EMAIL_GW'), env('PASSWORD_GW'), $request, $order_code);
+                    Log::info('Response GW OPENE: ' .$response['success']);
+                    //dd($response['success']);
+                    
+                });
+                return response()->json(['message' => 'Withdraw created successfully!'], 201);
+            }
+            
 
         } catch (\Exception $e) {
-            Log::error('Create Order Deposit failed: ' . $e->getMessage());
+            Log::error('Create Order Withdraw failed: ' .$request->customer_id . ' with error ' . $e->getMessage());
             return response()->json(['error' => 'Exeption Create Order Withdraw failed.'], 500);
         }
     }
 
+
+    //Call api Gateway 3rd
+    public function withdrawAmountByGateway($email, $password, $transferData, $order_code)
+    {
+        // Step 1: Login to get Access Token
+        $loginResponse = Http::post('https://api-payment.opene.io/v1/auth/login', [
+            'email' => $email,
+            'password' => $password
+        ]);
+        if ($loginResponse->failed()) {
+            Log::error('Login API failed: ' . $loginResponse->body());
+            return response()->json(['error' => 'Login failed'], 401);
+        }
+        
+        $loginData = $loginResponse->json();
+        
+        // Check if 'tokens' and 'access' fields exist
+        if (!isset($loginData['tokens']['access']['token'])) {
+            Log::error('Access token not found in response: ' . json_encode($loginData));
+            return response()->json(['error' => 'Access token not found'], 401);
+        }
+
+        $accessToken = $loginData['tokens']['access']['token'];
+
+        // Step 2: Perform the transfer using the Access Token
+        $transactionResponse = Http::withToken($accessToken)
+            ->post('https://api-payment.opene.io/v1/merchant/transaction/transfer-create-v2', [
+                'account_no' => $transferData['bank_account'],
+                'amount' => $transferData['amount'],
+                'bank_name' => $transferData['bank_name'],
+                'description' => $transferData['description'],
+                'customer_id' => $transferData['customer_id'],
+                'transaction_hash' => $order_code,
+            ]);
+            
+        if ($transactionResponse->failed()) {
+            Log::error('Transaction API failed: ' . $transactionResponse->body());
+            return response()->json(['error' => 'Transaction failed'], 400);
+        }
+
+        // Return success response
+        return $transactionData = $transactionResponse->json();
+    }
+
+
+
+
+
+
+
+
+
+
+
     public function callbackWithdraw(Request $request)
     {
         try {
-            $transaction_temp = transaction_temp::where('transactionHash', $request->input('partner_order_code'))
-                                        ->first();  // Use first() to get a single record
+            // Validate incoming request data
+            $validator = Validator::make($request->all(), [
+                'customer_id' => 'required|string',
+                'transaction_hash' => 'required|string',
+            ]);
     
-            $status = $request->input('transfer_record.status');
-        
-            if ($status == "2" && $transaction_temp) {
-                // Update the record if it exists
-                $transaction_temp->update(['status' => 'DONE', 'errorMsg' => '']);
-                return response()->json(['message' => 'Callback successfully!'], 201);
+            if ($validator->fails()) {
+                return response()->json(['errors' => $validator->errors()], 422);
             }
-            else if ($status == "3" && $transaction_temp) {
-                $errorMsg = $request->input('transfer_record.fail_reason');
-                switch ($errorMsg)
-                {
-                    case "1":
-                        $transaction_temp->update(['status' => 'REJ', 'errorMsg' => 'The information on the name/account number/card number is incorrect']);
-                        break;
-                    case "2":
-                        $transaction_temp->update(['status' => 'REJ', 'errorMsg' => 'The transaction amount exceeds the daily limit']);
-                        break;
-                    case "3":
-                        $transaction_temp->update(['status' => 'REJ', 'errorMsg' => 'Bank is maintaining']);
-                        break;
-                    case "4":
-                        $transaction_temp->update(['status' => 'REJ', 'errorMsg' => 'An unknown error']);
-                        break;
-                    case "5":
-                        $transaction_temp->update(['status' => 'REJ', 'errorMsg' => 'The information is wrong or the bank encountered an unknown error']);
-                        break;
-                }   
-                return response()->json(['message' => 'Callback successfully!'], 201);
+
+            $transaction_temp = transaction_temp::where('transactionHash', $request->transaction_hash)
+                                                ->where('user_id', $request->customer_id)
+                                        ->first();  // Use first() to get a single record
+ 
+            if (!$transaction_temp) {
+                return response()->json(['error' => 'Transaction not found'], 404);
             }
-            else {
-                return response()->json(['error' => 'Transaction not found or invalid status'], 404);
-            }
+
+            // Update the record if it exists
+            $transaction_temp->update(['status' => 'DONE', 'origPerson' => $request->bankTransactionId]);
+            return response()->json(['message' => 'Callback successfully!'], 201);
 
         } catch (\Exception $e) {
             Log::error('Callback failed: ' . $e->getMessage());

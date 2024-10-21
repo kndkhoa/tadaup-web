@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Log;
 use App\Models\WalletTadaup;
 use App\Models\CustomerItem;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 
 class DepositManageController extends Controller
@@ -405,10 +406,13 @@ class DepositManageController extends Controller
             $CampainFXTXN_ID = CampainFX_Txn::findOrFail($id);
             $desired_status = $CampainFXTXN_ID->status ?? '';
             
+            $CampainFXTXN_ID->timestamps = false; 
                 $CampainFXTXN_ID->update(['status' => 'WIN',
-                                        'origPerson' => $customer->full_name
+                                        'origPerson' => $customer->full_name,
+                                        'updated_at' => Carbon::now()  
                                         ]);
-            
+            $CampainFXTXN_ID->timestamps = true;  
+
              return redirect()->back()->with('success', 'Transaction win successfully.');
         }
         catch (e){
@@ -444,7 +448,7 @@ class DepositManageController extends Controller
     public function depositIncome(Request $request, $customerID)
     {
         try{
-
+           
             if(!$request->amount){
                 return back()->withErrors(['amount' => 'Please fill amount']);
             }
@@ -456,7 +460,6 @@ class DepositManageController extends Controller
                     ->where('type', 1)
                     ->firstOrFail()
                     ->increment('value', (double) $request->amount);
-
             Transaction_Temp::create([
                 'user_id' => $customerID,
                 'type' => 'DEPOSIT',

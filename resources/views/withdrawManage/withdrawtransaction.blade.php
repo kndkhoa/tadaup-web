@@ -54,9 +54,8 @@
                     <tr>
                       <th>Customer ID</th>
                       <th>Customer Name</th>
-                      <th>Type</th>
                       <th>Amount</th>
-                      <th>eWallet</th>
+                      <th>Currency</th>
                       <th>Status</th>
                       <th>Create_At</th>
                       <th>Approve</th>
@@ -68,21 +67,24 @@
                     <tr>
                       <td>{{$transaction_temp['user_id']}}</td>
                       <td>{{$transaction_temp['customer_name']}}</td>
-                      <td>{{$transaction_temp['type']}}</td>
                       <td>{{$transaction_temp['amount']}}</td>
-                      <td>{{$transaction_temp['eWallet']}}</td>
+                      <td>{{$transaction_temp['currency']}}</td>
                       <td>{{$transaction_temp['status']}}</td>
                       <td>{{$transaction_temp['created_at']}}</td>
+                      @if ($transaction_temp['currency'] === 'USDT')
                       <td><form action="{{ route('withdraw.approve', $transaction_temp['id']) }}" method="POST" style="display: inline;">
                           @csrf
+                           <input type="text" id="hash" class="form-control" name="hash" step="any" min="0" style="width: 130px;" value="Enter hash"><br/>
                             <button type="submit" name="action" value="approve"  class="btn btn-primary btn-sm">Approve</button>
                           </form>
                       </td>
                       <td><form action="{{ route('withdraw.reject', $transaction_temp['id']) }}" method="POST" style="display: inline;">
                             @csrf
+                            <input type="text" id="reject" class="form-control" name="reject" step="any" min="0" style="width: 130px;" value="Enter reject"><br/>
                             <button type="submit" name="action" value="reject" class="btn btn-danger btn-sm">Reject</button>
                             </form>
                       </td>
+                      @endif
                     </tr>     
                     @endforeach
                     </tbody>

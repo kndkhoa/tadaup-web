@@ -46,44 +46,7 @@
         </div>
     @endif
 
-        <div class="row">
-          <div class="col-md-6">
-            <div class="card card-primary">
-              <div class="card-header">
-                <h3 class="card-title">Share Commission MLM</h3>
-
-                <div class="card-tools">
-                  <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
-                    <i class="fas fa-minus"></i>
-                  </button>
-                </div>
-              </div>
-              <form action="{{ route('calculateMLM') }}" method="post">
-                  @csrf
-                <div class="card-body">
-                  <div class="form-group">
-                    <label for="inputEstimatedBudget">Amount</label>
-                    <input type="text" id="inputEstimatedBudget" class="form-control" name="amount" >
-                  </div>
-                  <div class="form-group">
-                    <label for="inputSpentBudget">FullName</label></br>
-                    <select id="customer_id" name="customer_id">
-                      <option value="">FullName</option>
-                      @foreach($customers as $customer)
-                      <option value="{{$customer['customer_id']}}">{{$customer['customer_id']}} - {{$customer['full_name']}}</option>
-                      @endforeach
-                    </select>
-                  </div>
-                  <div class="col-12">
-                    <input type="submit" value="Share" class="btn btn-success float-right">
-                  </div>
-                </div>
-              </form>
-              <!-- /.card-body -->
-            </div>
-            <!-- /.card -->
-          </div>
-        </div>
+        
 
         <div class="card">
         <div class="card-header">
