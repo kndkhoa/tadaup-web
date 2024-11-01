@@ -169,11 +169,11 @@
                       </td>
                       <td class="project_progress">
                           <div class="progress progress-sm">
-                              <div class="progress-bar bg-green" role="progressbar" aria-valuenow="{{$campain['profirPercent']}}" aria-valuemin="0" aria-valuemax="100" style="width: {{$campain['profirPercent']}}%">
+                              <div class="progress-bar bg-green" role="progressbar" aria-valuenow="{{$campain['profitPercent']}}" aria-valuemin="0" aria-valuemax="100" style="width: {{$campain['profitPercent']}}%">
                               </div>
                           </div>
                           <small>
-                              {{$campain['profirPercent']}}%
+                              {{$campain['profitPercent']}}%
                           </small>
                       </td>
                       <td class="project-state">

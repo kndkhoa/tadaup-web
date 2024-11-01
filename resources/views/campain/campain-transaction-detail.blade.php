@@ -148,7 +148,7 @@
                       </tr>
                       <tr>
                         <th>Profit Amount:</th>
-                        <td>{{$CampainFX_ID->profitAmount ?? 0}} USD</td>
+                        <td>{{$CampainFX_ID->profitMLM ?? 0}} USD</td>
                       </tr>
                     </table>
                   </div>

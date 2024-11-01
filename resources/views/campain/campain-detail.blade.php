@@ -100,10 +100,10 @@
                   <b class="d-block">{{$CampainFX_ID->fromDate ?? ''}} - {{$CampainFX_ID->toDate ?? ''}}</b>
                 </p>
                 <p class="text-sm">Profit Amount Balance
-                  <b class="d-block">{{$CampainFX_ID->profitAmount ?? ''}}</b>
+                  <b class="d-block">{{$CampainFX_ID->profitMLM ?? ''}}</b>
                 </p>
                 <p class="text-sm">Profit Percent
-                  <b class="d-block">{{$CampainFX_ID->profirPercent ?? ''}}</b>
+                  <b class="d-block">{{$CampainFX_ID->profitPercent ?? ''}}</b>
                 </p>
                 <p class="text-sm">Link Referal
                   <b class="d-block"><a href = "https://tadaup.com/campaign/{{$CampainFX_ID->campainID}}?sponserid={{$customer->user_id}}">https://tadaup.com/campaign/{{$CampainFX_ID->campainID}}?sponserid={{$customer->user_id}}</a></b>

@@ -64,8 +64,8 @@
                     <input type="text" class="form-control" id="ewallet_address" name="ewallet_address" placeholder="Enter ewallet address" value="{{$CampainFX_ID->ewalletAddress ?? ''}}">
                 </div>
                 <div class="form-group">
-                    <label for="exampleInputPassword1">Profit Amount</label>
-                    <input type="text" class="form-control" id="profit_amount" name="profit_amount" placeholder="Enter profit amount" value="{{$CampainFX_ID->profitAmount ?? ''}}">
+                    <label for="exampleInputPassword1">Profit MLM</label>
+                    <input type="text" class="form-control" id="profit_mlm" name="profit_mlm" placeholder="Enter profit MLM" value="{{$CampainFX_ID->profitMLM ?? ''}}">
                 </div>
                 <!-- /.form-group -->
               </div>
@@ -90,12 +90,12 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="exampleInputPassword1">Ewallet Network</label>
-                    <input type="text" readonly class="form-control" id="ewallet_network" name="ewallet_network" placeholder="Enter ewallet network" value="{{$CampainFX_ID->network ?? 'BEP20'}}">
+                    <label for="exampleInputPassword1">origPerson</label>
+                    <input type="text" class="form-control" id="origPerson" name="origPerson" placeholder="Enter telegram id" value="{{$CampainFX_ID->origPerson ?? ''}}">
                 </div>
                 <div class="form-group">
                     <label for="exampleInputPassword1">Profit Percent</label>
-                    <input type="text" class="form-control" id="profit_percent" name="profit_percent" placeholder="Enter profit percent" value="{{$CampainFX_ID->profirPercent ?? ''}}">
+                    <input type="text" class="form-control" id="profit_percent" name="profit_percent" placeholder="Enter profit percent" value="{{$CampainFX_ID->profitPercent ?? ''}}">
                 </div>
                 <!-- /.form-group -->
               </div>

@@ -97,7 +97,7 @@ class CampainFXTXNController extends Controller
     {
         try{
             $CampainFX_ID = CampainFX::findOrFail($campainID);
-            $profitAmount =  $CampainFX_ID->profitAmount ?? 0;
+            $profitAmount =  $CampainFX_ID->profitMLM ?? 0;
             $CampainFXTXN_ID = CampainFX_Txn::where('campainID', $campainID)
                             ->where('status', 'Y')
                             ->orderBy('created_at', 'desc') // Sort by creation date in descending order

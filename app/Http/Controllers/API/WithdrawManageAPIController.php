@@ -87,8 +87,8 @@ class WithdrawManageAPIController extends Controller
                         'bank_city'=> $request->bank_code ?? null,
                         'fullname' => $request->fullname ?? null,
                     ]);
-                    $response = $this->withdrawAmountByGateway(env('EMAIL_GW'), env('PASSWORD_GW'), $request, $order_code);
-                    Log::info('Response GW OPENE: ' .$response['success']);
+                    $response = $this->withdrawAmountByGateway(env('EMAIL_GW'), env('PASSWORD_GW'), $request, $order_code, $amount);
+                    Log::info('Response GW OPENE: ' .$response['success'] . ' ' . $response['message']);
                     //dd($response['success']);
                     
                 });
@@ -104,7 +104,7 @@ class WithdrawManageAPIController extends Controller
 
 
     //Call api Gateway 3rd
-    public function withdrawAmountByGateway($email, $password, $transferData, $order_code)
+    public function withdrawAmountByGateway($email, $password, $transferData, $order_code, $amount)
     {
         // Step 1: Login to get Access Token
         $loginResponse = Http::post('https://api-payment.opene.io/v1/auth/login', [
@@ -130,7 +130,7 @@ class WithdrawManageAPIController extends Controller
         $transactionResponse = Http::withToken($accessToken)
             ->post('https://api-payment.opene.io/v1/merchant/transaction/transfer-create-v2', [
                 'account_no' => $transferData['bank_account'],
-                'amount' => $transferData['amount'],
+                'amount' => $amount,
                 'bank_name' => $transferData['bank_name'],
                 'description' => $transferData['description'],
                 'customer_id' => $transferData['customer_id'],

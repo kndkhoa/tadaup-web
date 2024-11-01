@@ -30,8 +30,9 @@ class CampainFX extends Authenticatable
         'network',
         'currency',
         'status',
-        'profitAmount',
-        'profirPercent',
+        'profitMLM',
+        'profitPercent',
+        'origPerson',
         'created_at',
         'updated_at'
     ];

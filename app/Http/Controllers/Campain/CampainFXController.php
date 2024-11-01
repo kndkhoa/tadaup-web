@@ -48,14 +48,15 @@ class CampainFXController extends Controller
                     'fromDate' => $request->from_date,
                     'toDate' => $request->to_date,
                     'ewalletAddress' => $request->ewallet_address,
-                    'network' => $request->ewallet_network,
+                    'network' => 'TON',
                     'currency' => 'USDT',
                     'status' => $CampainFX_ID->status,
-                    'profitAmount' => $request->profit_amount,
-                    'profirPercent' => $request->profit_percent,
+                    'profitMLM' => $request->profit_mlm,
+                    'profitPercent' => $request->profit_percent,
+                    'origPerson' => $request->origPerson,
                     ],
                     ['campainID'],
-                    ['campainName', 'campainDescription', 'content', 'campain_amount', 'fromDate', 'toDate','ewalletAddress','network', 'currency', 'status', 'profitAmount',  'profirPercent']
+                    ['campainName', 'campainDescription', 'content', 'campain_amount', 'fromDate', 'toDate','ewalletAddress','network', 'currency', 'status', 'profitMLM',  'profitPercent', 'origPerson']
                 );
             }
             else
@@ -68,14 +69,15 @@ class CampainFXController extends Controller
                     'fromDate' => $request->from_date,
                     'toDate' => $request->to_date,
                     'ewalletAddress' => $request->ewallet_address,
-                    'network' => $request->ewallet_network,
+                    'network' => 'TON',
                     'currency' => 'USDT',
                     'status' => 'ORIG',
-                    'profitAmount' => $request->profit_amount,
-                    'profirPercent' => $request->profit_percent,
+                    'profitMLM' => $request->profit_mlm,
+                    'profitPercent' => $request->profit_percent,
+                    'origPerson' => $request->origPerson,
                     ],
                     ['campainID'],
-                    ['campainName', 'campainDescription', 'content', 'campain_amount', 'fromDate', 'toDate','ewalletAddress','network', 'currency', 'status', 'profitAmount',  'profirPercent']
+                    ['campainName', 'campainDescription', 'content', 'campain_amount', 'fromDate', 'toDate','ewalletAddress','network', 'currency', 'status', 'profitMLM',  'profitPercent', 'origPerson']
                 );
             }
             return redirect()->route('campain-new')

@@ -404,7 +404,10 @@ class UserManageAPIController extends Controller
     {
         try {
             // Validate incoming request data
-            $campainFXs = CampainFX::all();
+            //$campainFXs = CampainFX::all();
+            $campainFXs = CampainFX::join('customers', 'campainFX.origPerson', '=', 'customers.customer_id')
+                                ->select('campainFX.*','customers.*') 
+                                ->get();
              // Initialize an array to hold campaign data
             $data = [];
 
@@ -415,7 +418,11 @@ class UserManageAPIController extends Controller
                     'campainName' => $campainFX->campainName,
                     'campainDescription' => $campainFX->campainDescription,
                     'campainAmount' =>  $campainFX->campain_amount,
-                    'created_at' => $campainFX->created_at
+                    'origPerson' => $campainFX->full_name,
+                    'profitPercent' => $campainFX->profitPercent * 100 . '%',
+                    'profitMLM' => $campainFX->profitMLM * 100 . '%',
+                    'created_at' => $campainFX->created_at,
+                    
                 ];
             }
     
