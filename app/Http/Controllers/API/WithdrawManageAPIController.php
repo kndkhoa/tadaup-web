@@ -43,6 +43,7 @@ class WithdrawManageAPIController extends Controller
                 if ((double)$customerItemType1->value < (double)$request->amount) {
                     return response()->json(['error' => 'Insufficient funds.'], 500);
                 }
+
     
                 // Create a new order
                 $transaction_temp = transaction_temp::create([

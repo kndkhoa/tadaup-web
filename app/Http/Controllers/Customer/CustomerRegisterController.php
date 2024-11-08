@@ -77,7 +77,7 @@ class CustomerRegisterController extends Controller
             Customer::upsert([
                 'user_id' => $user_id,
                 'customer_id' => $user_id,
-                'role_id' => 1,
+                'role_id' => 2,
                 'full_name' => $request->fullname,
                 'phone' => $request->phone,
                 'address' => $request->address,

@@ -18,7 +18,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-
+use App\Models\Transaction_Temp;
 
 class UserManageAPIController extends Controller
 {
@@ -169,7 +169,7 @@ class UserManageAPIController extends Controller
                     [
                         'user_id' => $request->telegramid,
                         'customer_id' => $request->telegramid,
-                        'role_id' => 1,
+                        'role_id' => 2,
                         'full_name' => $request->name ?? $customer->full_name ?? null,
                         'phone' => $request->phone ?? $customer->phone ?? null,
                         'address' => $request->address ?? $customer->address ?? null,
@@ -252,23 +252,27 @@ class UserManageAPIController extends Controller
                                     ->where('campainFX_Txn.txnType', 'DEPOSIT')
                                     ->orderBy('campainFX_Txn.created_at', 'desc') // Sort by creation date in descending order
                                     ->join('campainFX', 'campainFX_Txn.campainID', '=', 'campainFX.campainID')
-                                    ->leftJoin('cutomer_connection', 'campainFX_Txn.transactionHash', '=', 'cutomer_connection.transactionHash') // Join on transactionHash
                                     ->select(
                                         'campainFX_Txn.id',
                                         'campainFX.campainName',
                                         'campainFX_Txn.txnType',
                                         'campainFX_Txn.amount',
-                                        'campainFX_Txn.status',
-                                        'cutomer_connection.report as report',  // Include customer_connection data
-                                        //'cutomer_connection.user_name as user_name',  // Check if a connection exists
-                                        //'cutomer_connection.password as password',
-                                        //'cutomer_connection.created_at as created_at'
+                                        'campainFX_Txn.status'
                                     )
                                     ->get();
 
-                
+                // Determine the role based on role_id
+                $role = '';
+                if ($customer->role_id == 1) {
+                    $role = 'admin';
+                } elseif ($customer->role_id == 2) {
+                    $role = 'user';
+                } elseif ($customer->role_id == 3) {
+                    $role = 'proTrader';
+                }
                 return response()->json([
                                         'customer' => $customer, 
+                                        'role' => $role,
                                         'assetment' => $customerItem,
                                         'MLM'=> $tree, 
                                         'campaign'=> $CampainFXTXN_ID,
@@ -459,8 +463,8 @@ class UserManageAPIController extends Controller
                 }
             }
             $this->calculateIncome($walletTadaup);
-
-            return response()->json(['message' => 'Calculate point successfully!'], 200);
+            Log::info('Calculate point MLM successfully!');
+            return response()->json(['message' => 'Calculate point MLM successfully!'], 200);
 
         } catch (\Exception $e) {
             Log::error('Calculate point Fail: ' . $e->getMessage());
@@ -567,6 +571,88 @@ class UserManageAPIController extends Controller
         }
     
         return $total;
+    }
+
+    //interestAuto theo campaign WIN
+    public function interestAuto()
+    {
+        try {
+            $desired_status = ['WIN'];
+            $type = 'DEPOSIT';
+            $CampainFXTXNs = CampainFX_TXN::whereIn('campainFX_Txn.status', $desired_status)
+                                ->where('campainFX_Txn.txnType', $type)
+                                ->orderBy('campainFX_Txn.created_at', 'desc') // Sort by creation date in descending order
+                                 ->get();
+            DB::transaction(function () use ($CampainFXTXNs) {              
+                foreach( $CampainFXTXNs as  $CampainFXTXN){
+                    $campainFX = CampainFX::where('campainID', $CampainFXTXN->campainID)
+                                            ->firstOrFail(); 
+                    $amount = ($campainFX->profitPercent * (double) $CampainFXTXN->amount)/30;
+                    
+
+                    $customerItemType1 = CustomerItem::where('customer_id', $CampainFXTXN->customerID)
+                                        ->where('type', 1)
+                                        ->firstOrFail()
+                                        ->increment('value', (double)  $amount);
+                        
+                    $order_code = 'ORD' . Str::uuid()->toString();
+                    Transaction_Temp::create([
+                        'user_id' => $CampainFXTXN->customerID,
+                        'type' => 'DEPOSIT',
+                        'amount' => $amount,
+                        'currency' => 'USDT',
+                        'transactionHash' => $order_code,
+                        'status' => 'DONE',
+                        'eWallet' => '1',
+                        'description' => 'Deposit interest auto from Campaign ' . $CampainFXTXN->campainID,
+                        'origPerson' => 'Tada Auto'
+                    ]);
+                }
+            });
+            Log::info('Share interest auto successfully!');
+            return response()->json(['message' => 'Share interest auto successfully!'], 200);
+        } catch (\Exception $e) {
+            Log::error('Share interest auto Fail: ' . $e->getMessage());
+            return response()->json(['error' => 'Share interest auto Fail.'], 500);
+        }
+    }
+
+    //interestAuto theo campaign WIN
+    public function getListCampaignProTrader(Request $request)
+    {
+        try {
+            $CampainFXTXN = CampainFX_TXN::where('campainFX.origPerson', $request->customerID)
+                                        ->where('campainFX_Txn.txnType', 'DEPOSIT')
+                                        ->where('campainFX_Txn.status', 'WIN')
+                                        ->orderBy('campainFX_Txn.created_at', 'desc') // Sort by creation date in descending order
+                                        ->join('campainFX', 'campainFX_Txn.campainID', '=', 'campainFX.campainID')
+                                                ->select(
+                                                    'campainFX.campainID',
+                                                    'campainFX.campainName',
+                                                    'campainFX.profitPercent',
+                                                    'campainFX.profitMLM',
+                                                    'campainFX_Txn.customerID',
+                                                    'campainFX_Txn.amount',
+                                                    'campainFX_Txn.status'
+                                                )
+                                            ->get();
+            $amountProfit = 0;
+            $amountMLM = 0;
+            foreach($CampainFXTXN as $campainFXTXN_detail){
+                $amountInterest = ($campainFXTXN_detail->profitPercent * (double) $campainFXTXN_detail->amount); //Lai theo ngay
+                $amountProfit = $amountProfit + $amountInterest;
+
+                $amountMLMDetail = ($campainFXTXN_detail->profitMLM * (double) $campainFXTXN_detail->amount); //Lai theo ngay
+                $amountMLM = $amountMLM + $amountMLMDetail;
+            }
+            Log::info('Get List Campaign ProTrader successfully!');
+            return response()->json(['data' => $CampainFXTXN,
+                                    'totalAmountProfit' =>  $amountProfit,
+                                    'totalAmountMLM' =>  $amountMLM], 200);
+        } catch (\Exception $e) {
+            Log::error('Get List Campaign ProTrader Fail: ' . $request->customerID . $e->getMessage());
+            return response()->json(['error' => 'Get List Campaign ProTrader Fail:'], 500);
+        }
     }
 
 }

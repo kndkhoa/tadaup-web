@@ -135,6 +135,9 @@
                       <th>
                           OrigPerson
                       </th>
+                      <th>
+                          CreateDate
+                      </th>
                   </tr>
               </thead>
               <tbody>
@@ -167,6 +170,7 @@
                         {{$transaction_temp->status}}
                       </td>
                       <td>{{$transaction_temp->origPerson}}</td>
+                      <td>{{$transaction_temp->created_at}}</td>
                   </tr>
                   @endforeach
               </tbody>
@@ -184,6 +188,16 @@
                     </button>
                 </div>
       @endif
+      @if($errors->any())
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+              @foreach ($errors->all() as $error)
+                  {{ $error }}
+                @endforeach
+              <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+              </button>
+        </div>
+        @endif
 
         <div class="row">
           <div class="col-md-6">

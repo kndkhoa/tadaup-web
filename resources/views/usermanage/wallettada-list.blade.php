@@ -73,9 +73,6 @@
                       <th>
                           Deposit Amount
                       </th>
-                      <th>
-                          Calculate Point
-                      </th>
                   </tr>
               </thead>
               <tbody>
@@ -99,15 +96,11 @@
                             @csrf
                             <input type="number" id="amount" class="form-control" name="amount" step="any" min="0" style="width: 100px;"><br/>
                             <input type="submit" value="Deposit" class="btn btn-primary btn-sm">
-                             
+                            @endif   
                        </form>
                       </td>
                       <td class="project-actions text-left">
-                          <form action="{{ route('calculatePoint') }}" method="POST" style="display: inline;">
-                            @csrf
-                            <input type="submit" value="Calculate Point" class="btn btn-primary btn-sm">
-                          @endif       
-                       </form>
+                            
                        @if($walletTadaup['id'] == '2')
                           <form action="{{ route('showWalletTadaHistory') }}" method="GET" style="display: inline;">
                             @csrf

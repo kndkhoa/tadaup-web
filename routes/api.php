@@ -65,6 +65,8 @@ Route::group(['prefix' => 'usermanage', 'as' => 'usermanage.', 'middleware' => '
     Route::get('/campaign', [UserManageAPIController::class, 'getAllCampaign'])->name('getAllCampaign');
     Route::post('/calculate-point', [UserManageAPIController::class, 'calculatePoint'])->name('calculatePoint');
     Route::post('/update-profile', [UserManageAPIController::class, 'updateProfile'])->name('updateProfile');
+    Route::post('/interest-auto', [UserManageAPIController::class, 'interestAuto'])->name('interestAuto');
+    Route::get('/list-campaign-protrader', [UserManageAPIController::class, 'getListCampaignProTrader'])->name('getListCampaignProTrader');
 });
 
 

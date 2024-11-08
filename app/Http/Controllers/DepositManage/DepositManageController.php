@@ -406,14 +406,52 @@ class DepositManageController extends Controller
             $CampainFXTXN_ID = CampainFX_Txn::findOrFail($id);
             $desired_status = $CampainFXTXN_ID->status ?? '';
             
-            $CampainFXTXN_ID->timestamps = false; 
+            DB::transaction(function () use ($CampainFXTXN_ID, $customer) {
+                $CampainFXTXN_ID->timestamps = false; 
                 $CampainFXTXN_ID->update(['status' => 'WIN',
                                         'origPerson' => $customer->full_name,
                                         'updated_at' => Carbon::now()  
                                         ]);
-            $CampainFXTXN_ID->timestamps = true;  
+                $CampainFXTXN_ID->timestamps = true;
 
-             return redirect()->back()->with('success', 'Transaction win successfully.');
+                $campainFX_ID = CampainFX::findOrFail($CampainFXTXN_ID->campainID);
+                if($campainFX_ID->origPerson != '1'){
+
+                    $customerItemType1 = CustomerItem::where('customer_id', $campainFX_ID->origPerson)
+                                        ->where('type', 1)
+                                        ->firstOrFail();
+
+                    // Calculate interest
+                    $createdDate = Carbon::parse($CampainFXTXN_ID->created_at)->startOfDay(); 
+                    // Loại bỏ giờ 
+                    $daysInMonth = $createdDate->daysInMonth; 
+                    $daysRemaining = $daysInMonth - $createdDate->day; 
+
+                    $amountInterest = ($campainFX_ID->profitPercent * (double) $CampainFXTXN_ID->amount)/30; //Lai theo ngay
+                    $amount = $CampainFXTXN_ID->amount - ($amountInterest * $daysRemaining); //Tien goc tru di (lai theo ngay * so ngay con lai)
+
+                    // Decrement the value for type = 1
+                    $customerItemType1->update([
+                        'value' => (double) $customerItemType1->value + $amount
+                    ]);
+
+                    $order_code = 'ORD' . Str::uuid()->toString();
+                    Transaction_Temp::create([
+                        'user_id' => $campainFX_ID->origPerson,
+                        'type' => 'DEPOSIT',
+                        'amount' => $amount,
+                        'currency' => 'USDT',
+                        'transactionHash' => $order_code,
+                        'status' => 'DONE',
+                        'eWallet' => '1',
+                        'description' => 'Deposit fund from user ' . $CampainFXTXN_ID->customerID,
+                        'origPerson' => $customer->full_name,
+                    ]);
+
+                }
+            });
+
+            return redirect()->back()->with('success', 'Transaction win successfully.');
         }
         catch (e){
             return redirect()->route('depositManage.campain-transaction-detail')
