@@ -62,19 +62,19 @@ class CampainFXController extends Controller
             else
             {
                 CampainFX::upsert([
-                    'campainName' => $request->campain_name,
-                    'campainDescription' => $request->campain_description,
-                    'content' => $request->campain_content,
-                    'campain_amount' => $request->campain_amount,
-                    'fromDate' => $request->from_date,
-                    'toDate' => $request->to_date,
-                    'ewalletAddress' => $request->ewallet_address,
+                    'campainName' => $request->campain_name  ?? null,
+                    'campainDescription' => $request->campain_description  ?? null,
+                    'content' => $request->campain_content  ?? null,
+                    'campain_amount' => $request->campain_amount  ?? null,
+                    'fromDate' => $request->from_date  ?? null,
+                    'toDate' => $request->to_date  ?? null,
+                    'ewalletAddress' => $request->ewallet_address  ?? null,
                     'network' => 'TON',
                     'currency' => 'USDT',
-                    'status' => 'ORIG',
-                    'profitMLM' => $request->profit_mlm,
-                    'profitPercent' => $request->profit_percent,
-                    'origPerson' => $request->origPerson,
+                    'status' => 'RUN',
+                    'profitMLM' => $request->profit_mlm  ?? null,
+                    'profitPercent' => $request->profit_percent  ?? null,
+                    'origPerson' => $request->origPerson  ?? null,
                     ],
                     ['campainID'],
                     ['campainName', 'campainDescription', 'content', 'campain_amount', 'fromDate', 'toDate','ewalletAddress','network', 'currency', 'status', 'profitMLM',  'profitPercent', 'origPerson']
@@ -97,13 +97,14 @@ class CampainFXController extends Controller
     {
         try{
 
-            $desired_status = 'ORIG';
+            $desired_status = 'RUN';
             // $listCampain = CampainFX::where('status', $desired_status)
             //                 ->orderBy('created_at', 'desc') // Sort by creation date in descending order
             //                 ->get();
             $listCampain = DB::table('campainFX')
                         ->where('campainFX.status', $desired_status)
                         ->leftJoin('campainFX_Txn', 'campainFX.campainID', '=', 'campainFX_Txn.campainID')
+                        ->leftJoin('customers', 'campainFX.origPerson', '=', 'customers.customer_id')
                         ->select(
                             'campainFX.campainID',
                             'campainFX.campainName',
@@ -111,7 +112,8 @@ class CampainFXController extends Controller
                             'campainFX.campainDescription',
                             'campainFX.status',
                             'campainFX.content', // Include all columns used in SELECT
-                            DB::raw('SUM(CASE WHEN campainFX_Txn.status = "Y" THEN campainFX_Txn.percent ELSE 0 END) as total_percent')
+                            'campainFX.origPerson',
+                            'customers.full_name',
                         )
                         ->groupBy(
                             'campainFX.campainID',
@@ -119,7 +121,9 @@ class CampainFXController extends Controller
                             'campainFX.created_at',
                             'campainFX.campainDescription',
                             'campainFX.status',
-                            'campainFX.content' // Include all columns used in SELECT
+                            'campainFX.content', // Include all columns used in SELECT
+                            'campainFX.origPerson',
+                            'customers.full_name'
                         )
                         ->orderBy('campainFX.created_at', 'desc')
                         ->get();

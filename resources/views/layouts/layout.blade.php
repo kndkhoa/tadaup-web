@@ -324,7 +324,7 @@
             <a href="#" class="nav-link">
               <i class="nav-icon fas fa-table"></i>
               <p>
-              Campain
+              Campaign
                 <i class="fas fa-angle-left right"></i>
               </p>
             </a>
@@ -332,28 +332,28 @@
               <li class="nav-item">
                 <a href="{{ route('campain-new') }}" class="nav-link">
                   <i class="far fa-circle nav-icon"></i>
-                  <p>Campain New</p>
+                  <p>Campaign</p>
                 </a>
               </li>
-              <li class="nav-item">
+              <!-- <li class="nav-item">
                 <a href="{{ route('campain-history') }}" class="nav-link">
                   <i class="far fa-circle nav-icon"></i>
-                  <p>Campain History</p>
+                  <p>Campaign History</p>
                 </a>
-              </li>
+              </li> -->
               @if(auth()->check() && auth()->user()->hasLevel('0'))
               <li class="nav-item">
                 <a href="{{ route('campain-editor') }}" class="nav-link">
                   <i class="far fa-circle nav-icon"></i>
-                  <p>Campain Editor</p>
+                  <p>Campaign Editor</p>
                 </a>
               </li>
-              <li class="nav-item">
+              <!-- <li class="nav-item">
                 <a href="{{ route('campain-transaction-list') }}" class="nav-link">
                   <i class="far fa-circle nav-icon"></i>
                   <p>Campain Transaction</p>
                 </a>
-              </li>
+              </li> -->
               @endif
             </ul>
           </li>

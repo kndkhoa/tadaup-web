@@ -8,12 +8,12 @@
       <div class="container-fluid">
         <div class="row mb-2">
           <div class="col-sm-6">
-            <h1>Campain Form</h1>
+            <h1>Campaign Form</h1>
           </div>
           <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
               <li class="breadcrumb-item"><a href="#">Home</a></li>
-              <li class="breadcrumb-item active">Campain Editor Form</li>
+              <li class="breadcrumb-item active">Campaign Editor Form</li>
             </ol>
           </div>
         </div>
@@ -35,7 +35,7 @@
         <!-- SELECT2 EXAMPLE -->
         <div class="card card-default">
           <div class="card-header">
-            <h3 class="card-title">Campain Form</h3>
+            <h3 class="card-title">Campaign Form</h3>
 
             <div class="card-tools">
               <button type="button" class="btn btn-tool" data-card-widget="collapse">
@@ -51,17 +51,9 @@
             <div class="row">
               <div class="col-md-6">
                 <div class="form-group">
-                    <label for="exampleInputEmail1">Campain Name</label>
+                    <label for="exampleInputEmail1">Campaign Name</label>
                     <input type="hidden" class="form-control" id="campainID" name="campainID" value=" {{ $CampainFX_ID->campainID ?? '' }}">
                     <input type="text" class="form-control" id="campain_name" name="campain_name" placeholder="Enter campain name" value=" {{ $CampainFX_ID->campainName ?? '' }}">
-                </div>
-                <div class="form-group">
-                    <label for="exampleInputPassword1">Amount</label>
-                    <input type="text" class="form-control" id="campain_amount" name="campain_amount" placeholder="Enter campain amount" value="{{$CampainFX_ID->campain_amount ?? ''}}">
-                </div>  
-                <div class="form-group">
-                    <label for="exampleInputPassword1">Ewallet Address</label>
-                    <input type="text" class="form-control" id="ewallet_address" name="ewallet_address" placeholder="Enter ewallet address" value="{{$CampainFX_ID->ewalletAddress ?? ''}}">
                 </div>
                 <div class="form-group">
                     <label for="exampleInputPassword1">Profit MLM</label>
@@ -71,24 +63,6 @@
               </div>
               <!-- /.col -->
               <div class="col-md-6">
-                <div class="form-group">
-                  <label>From Date:</label>
-                    <div class="input-group date" id="reservationdate" data-target-input="nearest">
-                        <input type="text" class="form-control datetimepicker-input" data-target="#reservationdate" name="from_date" value="{{$CampainFX_ID->fromDate ?? ''}}"/>
-                        <div class="input-group-append" data-target="#reservationdate" data-toggle="datetimepicker">
-                            <div class="input-group-text"><i class="fa fa-calendar"></i></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                  <label>To Date:</label>
-                    <div class="input-group date" id="reservationdate1" data-target-input="nearest">
-                        <input type="text" class="form-control datetimepicker-input" data-target="#reservationdate1" name="to_date" value="{{$CampainFX_ID->toDate ?? ''}}"/>
-                        <div class="input-group-append" data-target="#reservationdate1" data-toggle="datetimepicker">
-                            <div class="input-group-text"><i class="fa fa-calendar"></i></div>
-                        </div>
-                    </div>
-                </div>
                 <div class="form-group">
                     <label for="exampleInputPassword1">origPerson</label>
                     <input type="text" class="form-control" id="origPerson" name="origPerson" placeholder="Enter telegram id" value="{{$CampainFX_ID->origPerson ?? ''}}">

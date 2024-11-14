@@ -57,7 +57,10 @@
                           Description
                       </th>
                       <th>
-                          Progress Amount
+                          Trader ID
+                      </th>
+                      <th>
+                          Trader Name
                       </th>
                       <th style="width: 8%" class="text-center">
                           Status
@@ -85,13 +88,10 @@
                         {{$campain->campainDescription}}
                       </td>
                       <td class="project_progress">
-                          <div class="progress progress-sm">
-                              <div class="progress-bar bg-green" role="progressbar" aria-valuenow="57" aria-valuemin="0" aria-valuemax="100" style="width: {{$campain->total_percent ?? 0}}%">
-                              </div>
-                          </div>
-                          <small>
-                          {{$campain->total_percent ?? 0}}% Complete
-                          </small>
+                          {{$campain->origPerson}}
+                      </td>
+                      <td class="project_progress">
+                          {{$campain->full_name}}
                       </td>
                       <td class="project-state">
                           <span class="badge badge-success">{{$campain->status}}</span>

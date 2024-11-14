@@ -408,10 +408,15 @@ class UserManageAPIController extends Controller
     {
         try {
             // Validate incoming request data
-            //$campainFXs = CampainFX::all();
             $campainFXs = CampainFX::join('customers', 'campainFX.origPerson', '=', 'customers.customer_id')
-                                ->select('campainFX.*','customers.*') 
-                                ->get();
+                                ->select('campainFX.*', 'customers.*');
+            // Check if customerID is provided in the request
+            if ($request->has('customerID') && $request->customerID) {
+                $campainFXs->where('campainFX.origPerson', $request->customerID);
+            }
+
+            // Execute the query to get the results
+            $campainFXs = $campainFXs->get();
              // Initialize an array to hold campaign data
             $data = [];
 
@@ -626,29 +631,36 @@ class UserManageAPIController extends Controller
                                         ->where('campainFX_Txn.status', 'WIN')
                                         ->orderBy('campainFX_Txn.created_at', 'desc') // Sort by creation date in descending order
                                         ->join('campainFX', 'campainFX_Txn.campainID', '=', 'campainFX.campainID')
+                                        ->join('customers', 'campainFX_Txn.customerID', '=', 'customers.customer_id')
                                                 ->select(
                                                     'campainFX.campainID',
                                                     'campainFX.campainName',
                                                     'campainFX.profitPercent',
                                                     'campainFX.profitMLM',
                                                     'campainFX_Txn.customerID',
+                                                    'customers.full_name as name',
                                                     'campainFX_Txn.amount',
-                                                    'campainFX_Txn.status'
+                                                    'campainFX_Txn.status',
+                                                    
                                                 )
                                             ->get();
             $amountProfit = 0;
             $amountMLM = 0;
+            $amountInvest=0;
             foreach($CampainFXTXN as $campainFXTXN_detail){
                 $amountInterest = ($campainFXTXN_detail->profitPercent * (double) $campainFXTXN_detail->amount); //Lai theo ngay
                 $amountProfit = $amountProfit + $amountInterest;
 
                 $amountMLMDetail = ($campainFXTXN_detail->profitMLM * (double) $campainFXTXN_detail->amount); //Lai theo ngay
                 $amountMLM = $amountMLM + $amountMLMDetail;
+
+                $amountInvest = $amountInvest + (double) $campainFXTXN_detail->amount; // Tong tien dau tu
             }
             Log::info('Get List Campaign ProTrader successfully!');
             return response()->json(['data' => $CampainFXTXN,
-                                    'totalAmountProfit' =>  $amountProfit,
-                                    'totalAmountMLM' =>  $amountMLM], 200);
+                                    'totalAmountProfit' =>  (double)$amountProfit,
+                                    'totalAmountMLM' =>  (double)$amountMLM,
+                                    'totalAmountInvest' =>  (double)$amountInvest], 200);
         } catch (\Exception $e) {
             Log::error('Get List Campaign ProTrader Fail: ' . $request->customerID . $e->getMessage());
             return response()->json(['error' => 'Get List Campaign ProTrader Fail:'], 500);
