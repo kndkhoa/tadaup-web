@@ -19,6 +19,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Models\Transaction_Temp;
+use App\Models\CustomerAdditional;
+use App\Models\CustomerReport;
 
 class UserManageAPIController extends Controller
 {
@@ -202,7 +204,65 @@ class UserManageAPIController extends Controller
                     ['username', 'email', 'password', 'level', 'status'] // Fields to update
                 );
             }
-            
+
+            // Update customer additional
+            $customerAdditional = CustomerAdditional::find($request->telegramid);
+            // Prepare data for upsert using all fillable fields
+            $data = [
+                'customer_id' => $request->telegramid ?? $customerAdditional->telegramid,
+                'gameScore' => $request->gameScore ?? $customerAdditional->gameScore ?? null,
+                'gameChainCorrect' => $request->gameChainCorrect ?? $customerAdditional->gameChainCorrect ?? null,
+                'gameTurn' => $request->gameTurn ?? $customerAdditional->gameTurn ?? null,
+                'creditMainAddress' => $request->creditMainAddress ?? $customerAdditional->creditMainAddress ?? null,
+                'creditSecondaryAddress' => $request->creditSecondaryAddress ?? $customerAdditional->creditSecondaryAddress ?? null,
+                'creditDegree' => $request->creditDegree ?? $customerAdditional->creditDegree ?? null,
+                'creditGender' => $request->creditGender ?? $customerAdditional->creditGender ?? null,
+                'creditMarriage' => $request->creditMarriage ?? $customerAdditional->creditMarriage ?? null,
+                'creditJob' => $request->creditJob ?? $customerAdditional->creditJob ?? null,
+                'creditCompany' => $request->creditCompany ?? $customerAdditional->creditCompany ?? null,
+                'creditCompanyDetail' => $request->creditCompanyDetail ?? $customerAdditional->creditCompanyDetail ?? null,
+                'creditContactName1' => $request->creditContactName1 ?? $customerAdditional->creditContactName1 ?? null,
+                'creditContactPhone1' => $request->creditContactPhone1 ?? $customerAdditional->creditContactPhone1 ?? null,
+                'creditContactRelationship1' => $request->creditContactRelationship1 ?? $customerAdditional->creditContactRelationship1 ?? null,
+                'creditContactName2' => $request->creditContactName2 ?? $customerAdditional->creditContactName2 ?? null,
+                'creditContactPhone2' => $request->creditContactPhone2 ?? $customerAdditional->creditContactPhone2 ?? null,
+                'creditContactRelationship2' => $request->creditContactRelationship2 ?? $customerAdditional->creditContactRelationship2 ?? null,
+                'activeLastest' => $request->activeLastest ?? $customerAdditional->activeLastest ?? null,
+                'activeOffline' => $request->activeOffline ?? $customerAdditional->activeOffline ?? null,
+                'activeDiary' => $request->activeDiary ?? $customerAdditional->activeDiary ?? null,
+                'freetokenDone' => $request->freetokenDone ?? $customerAdditional->freetokenDone ?? null,
+                'proTrader' => $request->proTrader ?? $customerAdditional->proTrader ?? null,
+            ];
+
+            // Use upsert for inserting or updating
+            CustomerAdditional::upsert(
+                [$data],
+                ['customer_id'], // Keys to check for upsert
+                array_keys($data) // Fields to update
+            );
+
+            //Add customer connection
+            if($request->link_url || $request->userNameMT4 || $request->passwordMT4){
+                CustomerConnection::create([
+                    'customer_id' => $request->telegramid,
+                    'link_url' => $request->link_url ?? null,
+                    'user_name' => $request->userNameMT4 ?? null,
+                    'password' => $request->passwordMT4 ?? null,
+                    'type' => $request->type ?? null,
+                    'status' => 'ACTIVE'
+                ]);
+            }
+
+            //Add  CustomerReport
+            if($request->reportNet || $request->reportVolume || $request->reportExchange || $request->reportDate){
+                CustomerReport::create([
+                    'customer_id' => $request->telegramid,
+                    'reportNet' => $request->reportNet ?? null,
+                    'reportVolume' => $request->reportVolume ?? null,
+                    'reportExchange' => $request->reportExchange ?? null,
+                    'reportDate' => $request->reportDate ?? null
+                ]);
+            }
 
             return response()->json(['user' => $request->telegramid, 'message' => 'Update profile successfully!'], 201);
         } 
@@ -261,6 +321,9 @@ class UserManageAPIController extends Controller
                                     )
                                     ->get();
 
+                //Customer additional
+                $customerAdditional = CustomerAdditional::where('customer_id', $request->customerID)
+                                            ->first();
                 // Determine the role based on role_id
                 $role = '';
                 if ($customer->role_id == 1) {
@@ -273,6 +336,7 @@ class UserManageAPIController extends Controller
                 return response()->json([
                                         'customer' => $customer, 
                                         'role' => $role,
+                                        'additional' =>  $customerAdditional ?? null,
                                         'assetment' => $customerItem,
                                         'MLM'=> $tree, 
                                         'campaign'=> $CampainFXTXN_ID,

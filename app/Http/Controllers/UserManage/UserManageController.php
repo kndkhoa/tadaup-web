@@ -18,6 +18,7 @@ use App\Models\WalletTadaup;
 use Illuminate\Support\Facades\Http;  // Laravel's HTTP client
 use App\Models\Transaction_Temp;
 use App\Models\CustomerItem;
+use App\Models\CustomerReport;
 
 
 class UserManageController extends Controller
@@ -319,10 +320,41 @@ class UserManageController extends Controller
                 'description' => 'Share Commission MLM from customer ID: ' .$request->customerID,
                 'origPerson' => 'MLM'
             ]);
-
-
         });
     }
   
+    //==============Share Report Trading===================//
+    public function showReportTrading(Request $request, $id = null)
+    {
+        try {
+            // Retrieve all customers for the dropdown
+            $customers = Customer::all();
+            $id = $request->query('id', $id);
+            if ($id) {
+                // Retrieve a single report by customer ID
+                $customerReport = CustomerReport::where('customer_report.customer_id', $id)
+                    ->join('customers', 'customer_report.customer_id', '=', 'customers.customer_id')
+                    ->select('customer_report.*', 'customers.full_name as customer_name')
+                    ->orderBy('customer_report.created_at', 'desc') // Order by created_at in descending order
+                    ->get();
+
+                $data = compact('customerReport', 'customers');
+                return view('usermanage.report-trading', $data);
+            }
+
+            // Retrieve all reports
+            $customerReport = CustomerReport::join('customers', 'customer_report.customer_id', '=', 'customers.customer_id')
+                ->select('customer_report.*', 'customers.full_name as customer_name')
+                ->orderBy('customer_report.created_at', 'desc') // Order by created_at in descending order
+                ->get();
+
+            $data = compact('customerReport', 'customers');
+            return view('usermanage.report-trading', $data);
+        } catch (\Exception $e) {
+            return redirect()->route('showReportTrading')
+                ->withErrors('Show Report Trading failed: ' . $e->getMessage());
+        }
+    }
+
 
 }

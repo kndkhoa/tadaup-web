@@ -92,7 +92,7 @@
                       </td>
                       <td class="project-actions text-left">
                         @if($walletTadaup['id'] == '1')
-                          <form action="{{ route('depositWalletTadaIncome') }}" method="POST" style="display: inline;">
+                        <form action="{{ route('depositWalletTadaIncome') }}" method="POST" style="display: inline;">
                             @csrf
                             <input type="number" id="amount" class="form-control" name="amount" step="any" min="0" style="width: 100px;"><br/>
                             <input type="submit" value="Deposit" class="btn btn-primary btn-sm">
