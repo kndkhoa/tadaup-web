@@ -53,7 +53,7 @@
                           Email
                       </th>
                       <th>
-                          SponserID
+                          Role
                       </th>
                       <th>
                           Detail
@@ -84,7 +84,18 @@
                         {{$customer->email}}
                       </td>
                       <td>
-                        {{$customer->user_sponser_id}}
+                        @php
+                            if ($customer->role_id == 1) {
+                                $role = 'admin';
+                            } elseif ($customer->role_id == 2) {
+                                $role = 'user';
+                            } elseif ($customer->role_id == 3) {
+                                $role = 'proTrader';
+                            } else {
+                                $role = 'unknown'; // Optional fallback
+                            }
+                        @endphp
+                        {{ $role }}
                       </td>
                       <td class="project-actions text-right">
                                   <form action="{{ route('showCustomerDetail', $customer['customer_id']) }}" method="POST" style="display: inline;">

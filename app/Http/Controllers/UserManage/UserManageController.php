@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\Http;  // Laravel's HTTP client
 use App\Models\Transaction_Temp;
 use App\Models\CustomerItem;
 use App\Models\CustomerReport;
-
+use Illuminate\Support\Facades\Log;
 
 class UserManageController extends Controller
 {
@@ -327,6 +327,7 @@ class UserManageController extends Controller
     public function showReportTrading(Request $request, $id = null)
     {
         try {
+            Log::error('This is a test error for Telegram integration.');
             // Retrieve all customers for the dropdown
             $customers = Customer::all();
             $id = $request->query('id', $id);

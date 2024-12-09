@@ -20,12 +20,12 @@ class CustomerConnection extends Authenticatable
     protected $table = 'cutomer_connection';
     protected $fillable = [
         'customer_id',
-        'transactionHash',
         'link_url',
         'user_name',
         'password',
         'type',
-        'status'
+        'status',
+        'exchangeName'
     ];
 
 

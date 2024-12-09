@@ -206,7 +206,8 @@ class UserManageAPIController extends Controller
             }
 
             // Update customer additional
-            $customerAdditional = CustomerAdditional::find($request->telegramid);
+            // Lấy bản ghi hiện tại từ cơ sở dữ liệu
+            $currentCustomerAdditional = CustomerAdditional::where('customer_id', $request->telegramid)->first();
             // Prepare data for upsert using all fillable fields
             $data = [
                 'customer_id' => $request->telegramid ?? $customerAdditional->telegramid,
@@ -229,10 +230,45 @@ class UserManageAPIController extends Controller
                 'creditContactRelationship2' => $request->creditContactRelationship2 ?? $customerAdditional->creditContactRelationship2 ?? null,
                 'activeLastest' => $request->activeLastest ?? $customerAdditional->activeLastest ?? null,
                 'activeOffline' => $request->activeOffline ?? $customerAdditional->activeOffline ?? null,
-                'activeDiary' => $request->activeDiary ?? $customerAdditional->activeDiary ?? null,
-                'freetokenDone' => $request->freetokenDone ?? $customerAdditional->freetokenDone ?? null,
+                'activeDiary' => $request->activeDiary, // Mảng mới từ request
+                'freetokenDone' => $request->freetokenDone, // Dữ liệu mới
                 'proTrader' => $request->proTrader ?? $customerAdditional->proTrader ?? null,
             ];
+
+            // Xử lý `freetokenDone` để thêm phần tử mới vào mảng hiện tại
+            if ($currentCustomerAdditional) {
+                $existingTokens = $currentCustomerAdditional->freetokenDone ?? []; // Lấy mảng hiện tại
+                if (is_string($existingTokens)) {
+                    $existingTokens = json_decode($existingTokens, true) ?? []; // Chuyển đổi JSON thành mảng
+                }
+
+                if (is_string($data['freetokenDone'])) {
+                    $existingTokens[] = $data['freetokenDone']; // Thêm phần tử mới
+                }
+
+                $data['freetokenDone'] = json_encode($existingTokens); // Chuyển mảng thành JSON để lưu
+            } else {
+                // Nếu chưa có bản ghi, khởi tạo mảng mới với phần tử từ request
+                $data['freetokenDone'] = json_encode([$data['freetokenDone']]);
+            }
+
+           // Xử lý activeDiary để thêm vào mảng hiện tại
+            if ($currentCustomerAdditional) {
+                // Lấy giá trị hiện tại từ cơ sở dữ liệu
+                $existingActiveDiary = $currentCustomerAdditional->activeDiary ?? '[]'; // Nếu NULL thì khởi tạo mảng rỗng
+                $existingActiveDiary = json_decode($existingActiveDiary, true); // Chuyển JSON thành mảng (nếu là JSON)
+
+                if (is_array($data['activeDiary'])) {
+                    // Thêm mảng mới vào dữ liệu hiện tại
+                    $existingActiveDiary[] = $data['activeDiary'];
+                }
+
+                $data['activeDiary'] = json_encode($existingActiveDiary); // Chuyển mảng thành JSON để lưu
+            } else {
+                // Nếu không có dữ liệu, khởi tạo cột activeDiary với giá trị mới
+                $data['activeDiary'] = json_encode([$data['activeDiary']]);
+            }
+
 
             // Use upsert for inserting or updating
             CustomerAdditional::upsert(
@@ -249,6 +285,7 @@ class UserManageAPIController extends Controller
                     'user_name' => $request->userNameMT4 ?? null,
                     'password' => $request->passwordMT4 ?? null,
                     'type' => $request->type ?? null,
+                    'exchangeName' => $request->exchangeName ?? null,
                     'status' => 'ACTIVE'
                 ]);
             }
@@ -324,6 +361,10 @@ class UserManageAPIController extends Controller
                 //Customer additional
                 $customerAdditional = CustomerAdditional::where('customer_id', $request->customerID)
                                             ->first();
+                
+                //Customer connection
+                $customerConnection = CustomerConnection::where('customer_id', $request->customerID)
+                                ->get();
                 // Determine the role based on role_id
                 $role = '';
                 if ($customer->role_id == 1) {
@@ -340,7 +381,7 @@ class UserManageAPIController extends Controller
                                         'assetment' => $customerItem,
                                         'MLM'=> $tree, 
                                         'campaign'=> $CampainFXTXN_ID,
-                                        //'MT4' => $customerConnection,
+                                        'exchange' => $customerConnection,
                                         'message' => 'Get user successfully!'], 201);
             }
 
