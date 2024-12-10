@@ -147,16 +147,6 @@ class WithdrawManageAPIController extends Controller
         return $transactionData = $transactionResponse->json();
     }
 
-
-
-
-
-
-
-
-
-
-
     public function callbackWithdraw(Request $request)
     {
         try {

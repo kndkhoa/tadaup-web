@@ -56,7 +56,10 @@
                           Role
                       </th>
                       <th>
-                          Detail
+                        Active ProTrader
+                      </th>
+                      <th>
+                         Detail
                       </th>
                   </tr>
               </thead>
@@ -97,11 +100,24 @@
                         @endphp
                         {{ $role }}
                       </td>
-                      <td class="project-actions text-right">
+
+                      
+                      <td class="project-actions text-center">
+                        @php
+                          if ($customer->role_id == 2) {  @endphp 
+                            <form action="{{ route('activeProTrader', $customer['customer_id']) }}" method="POST" style="display: inline;">
+                                      @csrf
+                                      <input type="submit" value="Active ProTrader" class="btn btn-primary btn-sm">
+                                  </form>
+                          @php  }
+                        @endphp    
+                      </td>
+                              
+                      <td class="project-actions text-center">
                                   <form action="{{ route('showCustomerDetail', $customer['customer_id']) }}" method="POST" style="display: inline;">
                                       @csrf
                                       <input type="submit" value="View" class="btn btn-primary btn-sm">
-                       </form>
+                                  </form>
                       </td>
                   </tr>
                   @endforeach

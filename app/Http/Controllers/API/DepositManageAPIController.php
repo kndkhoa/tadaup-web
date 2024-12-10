@@ -139,31 +139,46 @@ class DepositManageAPIController extends Controller
 
             //Dang ky thi quy
             if ($request->ewallet == "2") {
-                // Transaction for withdrawal
                 $order_code = 'ORD' . Str::uuid()->toString();
+                // Transaction for withdrawal
                 $campainFX = CampainFX::where('campainID', $request->campainID)
                                         ->firstOrFail();  // Throws exception if not found  
                 if (!$campainFX) {
                     return response()->json(['error' => $request->campainID . ' not exists.'], 500);
                 }                
-                $transaction_Temp = Transaction_Temp::create([
-                    'user_id' => $request->customer_id,
-                    'type' => 'WITHDRAW',
-                    'amount' => $request->amount,
-                    'currency' => 'USDT',
-                    'eWallet' => '1',
-                    'transactionHash' => $order_code,
-                    'status' => 'DONE',
-                ]);
+               
                 
-                DB::transaction(function () use ($request, $campainFX) {
+                DB::transaction(function () use ($request, $campainFX, $order_code) {
+
+                    //Step 1. Save transaction History ví khách
+                    $transaction_Temp = Transaction_Temp::create([
+                        'user_id' => $request->customer_id,
+                        'type' => 'WITHDRAW',
+                        'amount' => $request->amount,
+                        'currency' => 'USDT',
+                        'eWallet' => '1',
+                        'transactionHash' => $order_code,
+                        'status' => 'DONE',
+                    ]);
+
+                    $transaction_Temp = Transaction_Temp::create([
+                        'user_id' => $request->customer_id,
+                        'type' => 'DEPOSIT',
+                        'amount' => $request->amount,
+                        'currency' => 'USDT',
+                        'eWallet' => '2',
+                        'transactionHash' => $order_code,
+                        'status' => 'DONE',
+                    ]);
+
                     // Retrieve and update customer item for type = 1
                     $customerItemType1 = CustomerItem::where('customer_id', $request->customer_id)
                         ->where('type', 1)
                         ->firstOrFail();  // Throws exception if not found
 
                     if ((double)$customerItemType1->value < (double)$request->amount) {
-                        return response()->json(['error' => 'Insufficient funds.'], 500);
+                        Log::error('Insufficient funds: CustomerItem Value = ' . $customerItemType1->value . ', Requested Amount = ' . $request->amount);
+                        throw new \Exception('Insufficient funds.'); 
                     }
 
                     // Decrement the value for type = 1
@@ -180,6 +195,35 @@ class DepositManageAPIController extends Controller
                     $customerItemType2->update([
                         'value' => (double) $customerItemType2->value + (double) $request->amount
                     ]);
+
+                    //Step 2. Save transaction History ví pro trader
+                    $currentDate = Carbon::now(); // Get the current date
+                    $endOfMonth = $currentDate->endOfMonth(); // Get the last day of the month
+                    $remainingDays = Carbon::now()->diffInDays(Carbon::now()->endOfMonth());
+
+                    $amountAvg = ($campainFX->profitPercent * (double) $request->amount)/30;
+                    $amount = (double)$amountAvg * $remainingDays;
+                    $amount = (double)$request->amount - (double)$amount;
+                    $transaction_Temp = Transaction_Temp::create([
+                        'user_id' => $campainFX->origPerson,
+                        'type' => 'DEPOSIT',
+                        'amount' => $amount, //amoun tru lãi
+                        'currency' => 'USDT',
+                        'eWallet' => '1',
+                        'transactionHash' => $order_code,
+                        'status' => 'DONE',
+                    ]);
+
+                    // Retrieve and update customer item for type = 1
+                    $customerItemType1 = CustomerItem::where('customer_id', $campainFX->origPerson)
+                        ->where('type', 1)
+                        ->firstOrFail();  // Throws exception if not found
+                    // Increment the value for type = 1
+                    $customerItemType1->update([
+                        'value' => (double) $customerItemType1->value + (double) $amount
+                    ]);
+
+
                 });
 
                 // Create a new campaign transaction
@@ -195,7 +239,9 @@ class DepositManageAPIController extends Controller
                     'origPerson' => 'ANAN',
                 ]);
 
-                return response()->json(['message' => 'Register Fund successfully!'], 201);
+                Log::info(['message' => 'Customer ' . $request->customer_id . ' register Fund successfully with CampaignID ' . $request->campainID,
+                            '$order_code' => $order_code]);
+                return response()->json(['message' => 'Customer ' . $request->customer_id . ' register Fund successfully with CampaignID ' . $request->campainID,  '$order_code' => $order_code], 201);
             }
 
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
@@ -205,7 +251,7 @@ class DepositManageAPIController extends Controller
         } catch (\Exception $e) {
             // Log any other exception
             Log::error('Deposit wallet failed: ' . $e->getMessage());
-            return response()->json(['error' => 'Deposit wallet failed.'], 500);
+            return response()->json(['error' =>  $request->customer_id . 'Deposit wallet failed.'], 500);
         }
     }
 

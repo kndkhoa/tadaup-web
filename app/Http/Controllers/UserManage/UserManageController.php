@@ -154,6 +154,28 @@ class UserManageController extends Controller
         }
     }
 
+    public function activeProTrader($cutomerID)
+    {
+        try{
+            $customer = Customer::find($cutomerID);
+
+            if ($customer) {
+                // Update the role_id
+                $customer->role_id = 3;
+                $customer->save(); // Save changes to the database
+            }
+
+             $customers = Customer::join('users', 'customers.customer_id', '=', 'users.user_id')
+             ->select('customers.*',  'users.email') 
+             ->get();
+            return view('usermanage.customer-list', compact(['customers']));
+        }
+        catch (e){
+            return redirect()->route('showCustomerList')
+            ->withErrors('Get All Campaign Fail.' + e);
+        }
+    }
+
     private function buildTree($user)
     {
         $tree = [

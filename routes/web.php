@@ -102,6 +102,7 @@ Route::controller(UserManageController::class)->middleware('auth')->group(functi
     Route::post('/calculate-point', 'calculatePoint')->name('calculatePoint')->middleware('level:0');
     Route::post('/deposit-income', 'depositWalletTadaIncome')->name('depositWalletTadaIncome')->middleware('level:0');
     Route::match(['get', 'post'],'/customer-detail/{id}', 'showCustomerDetail')->name('showCustomerDetail')->middleware('level:0');
+    Route::match(['get', 'post'],'/activeProTrader/{id}', 'activeProTrader')->name('activeProTrader')->middleware('level:0');
     Route::post('/creatConnection', 'creatConnection')->name('creatConnection')->middleware('level:0');
     Route::post('/deleteConnection/{id}/delete', 'deleteConnection')->name('deleteConnection')->middleware('level:0');
     Route::get('/commissionmlm', 'showCommissionMLM')->name('showCommissionMLM')->middleware('level:0');
