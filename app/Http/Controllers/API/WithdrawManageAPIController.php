@@ -13,7 +13,7 @@ use Carbon\Carbon;
 use App\Models\CustomerItem;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
-
+use App\Models\WalletTadaup;
 
 class WithdrawManageAPIController extends Controller
 {
@@ -175,6 +175,47 @@ class WithdrawManageAPIController extends Controller
         } catch (\Exception $e) {
             Log::error('Callback failed: ' . $e->getMessage());
             return response()->json(['error' => 'Callback failed.'], 500);
+        }
+    }
+
+
+    public function approve(Request $request)
+    {
+        try {
+            $transaction_temp = Transaction_Temp::where([
+                                                        ['user_id', '=', $request->customer_id],
+                                                        ['status', '=', 'WAIT'],
+                                                        ['amount', '=', $request->amount],
+                                                        ['type', '=', 'WITHDRAW']
+                                                    ])->first();
+            
+
+            
+            DB::transaction(function () use ($transaction_temp) {
+                $desired_status = 'DONE';
+                // Update the transaction status and set the originating person
+                $transaction_temp->update([
+                    'status' => $desired_status,
+                    'origPerson' => 'ANAN',
+                ]);
+
+                //Vi USDT khach
+                CustomerItem::where('customer_id', $transaction_temp->user_id)
+                                    ->where('type', 1)
+                                    ->decrement('value', (double) $transaction_temp->amount);
+
+
+                //Vi INCOME Tada
+                WalletTadaup::where('walletName', 'LIQUID')
+                                    ->where('id', 2)
+                                    ->decrement('value', (double) $transaction_temp->amount);
+
+            });
+            Log::info('Customer ID' . $transaction_temp->user_id . ' approved and updated transaction withdraw successfully.');
+            return response()->json(['message' => 'Customer ID' . $transaction_temp->user_id . ' approved and updated transaction withdraw successfully.'], 201);
+        } catch (\Exception $e) {
+            Log::error('Customer ID' . $transaction_temp->user_id . ' approved and updated transaction withdraw fail.');
+            return response()->json(['error' => 'Customer ID' . $transaction_temp->user_id . ' approved and updated transaction withdraw fail.'], 500);
         }
     }
 

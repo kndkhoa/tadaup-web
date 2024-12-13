@@ -16,6 +16,7 @@ use Illuminate\Support\Str;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use App\Models\CustomerAdditional;
 
 
 
@@ -252,6 +253,139 @@ class DepositManageAPIController extends Controller
             // Log any other exception
             Log::error('Deposit wallet failed: ' . $e->getMessage());
             return response()->json(['error' =>  $request->customer_id . 'Deposit wallet failed.'], 500);
+        }
+    }
+
+    public function swap(Request $request)
+    {
+        try {
+            // Validate incoming request data
+            $validator = Validator::make($request->all(), [
+                'customer_id' => 'required|string|min:1',
+                'fromToken' => 'required|string|max:500',
+                'toToken' => 'required|string|max:500',
+                'amount' => 'required|string',
+                
+            ]);
+        
+            if ($validator->fails()) {
+                return response()->json(['errors' => $validator->errors()], 422);
+            }
+            $order_code = 'ORD' . Str::uuid()->toString();
+
+            //Kiem tra so du fromToken
+            if($request->fromToken === 'TDU' && $request->toToken === 'USDT'){
+                //Get so du vi TDU
+                $customerItemType3 = CustomerItem::where('customer_id', $request->customer_id)
+                        ->where('type', 3)
+                        ->firstOrFail();
+                //Get so du vi activeCore
+                $activeCore =  CustomerAdditional::where('customer_id', $request->customer_id)
+                                ->firstOrFail();
+
+                if((double)$customerItemType3->value <= 0 || (double)$customerItemType3->value < $request->amount){
+                    Log::error('fromToken ' . $request->fromToken . ' not enough!' );
+                    return response()->json(['error' => 'fromToken ' . $request->fromToken . ' not enough!'], 404);
+                }
+                if((double)$activeCore->activeScore < $request->amount){
+                    Log::error('ActiveCore less than ' . $request->amount );
+                    return response()->json(['error' => 'ActiveCore less than ' . $request->amount], 404);
+                }
+
+                DB::transaction(function () use ($request, $order_code) {
+                        // Store transaction temporarily WITH
+                        Transaction_Temp::create([
+                            'user_id' => $request->customer_id,
+                            'type' => 'WITHDRAW',
+                            'amount' => $request->amount,
+                            'currency' => $request->fromToken,
+                            'eWallet' => '3',
+                            'transactionHash' => $order_code,
+                            'status' => 'DONE',
+                            'origPerson' => 'ANAN',
+                        ]);
+                        // Decrement the value for the customer item with type = 3
+                        CustomerItem::where('customer_id', $request->customer_id)
+                                    ->where('type', 3)
+                                    ->decrement('value', (double) $request->amount);
+    
+                        Transaction_Temp::create([
+                            'user_id' => $request->customer_id,
+                            'type' => 'DEPOSIT',
+                            'amount' => $request->amount,
+                            'currency' => $request->toToken,
+                            'eWallet' => '1',
+                            'transactionHash' => $order_code,
+                            'status' => 'DONE',
+                            'origPerson' => 'ANAN',
+                        ]);
+                        // Increment the value for the customer item with type = 1
+                        CustomerItem::where('customer_id', $request->customer_id)
+                                    ->where('type', 1)
+                                    ->increment('value', (double) $request->amount);
+
+                        // Decrement the value active Core
+                        CustomerAdditional::where('customer_id', $request->customer_id)
+                                    ->decrement('activeScore', (double) $request->amount);
+                });
+            }
+            if($request->fromToken === 'USDT' && $request->toToken === 'TDU'){
+                //Get so du vi USDT
+                $customerItemType1 = CustomerItem::where('customer_id', $request->customer_id)
+                        ->where('type', 1)
+                        ->firstOrFail();
+
+                if((double)$customerItemType1->value <= 0 || (double)$customerItemType1->value < $request->amount){
+                    Log::error('fromToken ' . $request->fromToken . ' not enough!' );
+                    return response()->json(['error' => 'fromToken ' . $request->fromToken . ' not enough!'], 404);
+                }
+
+                DB::transaction(function () use ($request, $order_code) {
+                        // Store transaction temporarily WITH
+                        Transaction_Temp::create([
+                            'user_id' => $request->customer_id,
+                            'type' => 'WITHDRAW',
+                            'amount' => $request->amount,
+                            'currency' => $request->fromToken,
+                            'eWallet' => '1',
+                            'transactionHash' => $order_code,
+                            'status' => 'DONE',
+                            'origPerson' => 'ANAN',
+                        ]);
+                        // Decrement the value for the customer item with type = 3
+                        CustomerItem::where('customer_id', $request->customer_id)
+                                    ->where('type', 1)
+                                    ->decrement('value', (double) $request->amount);
+    
+                        Transaction_Temp::create([
+                            'user_id' => $request->customer_id,
+                            'type' => 'DEPOSIT',
+                            'amount' => $request->amount,
+                            'currency' => $request->toToken,
+                            'eWallet' => '3',
+                            'transactionHash' => $order_code,
+                            'status' => 'DONE',
+                            'origPerson' => 'ANAN',
+                        ]);
+                        // Increment the value for the customer item with type = 1
+                        CustomerItem::where('customer_id', $request->customer_id)
+                                    ->where('type', 3)
+                                    ->increment('value', (double) $request->amount);
+                });
+            }
+            
+            Log::info(['message' => 'Customer ' . $request->customer_id . ' Swap Token successfully',
+                                        '$order_code' => $order_code]);
+            return response()->json(['message' => 'Customer ' . $request->customer_id . ' Swap Token successfully', '$order_code' => $order_code], 201);
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            // Handle model not found exception (like firstOrFail)
+            Log::error('Swap Token failed: ' . $e->getMessage());
+            return response()->json(['error' => 'Swap Token Fail.'], 404);
+        } catch (\Exception $e) {
+            // Log any other exception
+            Log::error('Deposit wallet failed: ' . $e->getMessage());
+            return response()->json(['error' =>  $request->customer_id . ' Swap Token failed.'], 500);
         }
     }
 

@@ -39,6 +39,7 @@ class CustomerAdditional extends Authenticatable
         'creditContactRelationship2',
         'activeLastest',
         'activeOffline',
+        'activeScore',
         'activeDiary',
         'freetokenDone',
         'proTrader',
