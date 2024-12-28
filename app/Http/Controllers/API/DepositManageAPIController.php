@@ -169,7 +169,7 @@ class DepositManageAPIController extends Controller
                         'currency' => 'USDT',
                         'eWallet' => '2',
                         'transactionHash' => $order_code,
-                        'status' => 'DONE',
+                        'status' => 'WIN',
                     ]);
 
                     // Retrieve and update customer item for type = 1

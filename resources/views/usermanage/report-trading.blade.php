@@ -93,10 +93,13 @@
                     Report Exchange
                     </th>
                     <th>
-                    Report Date
+                    Report Support Team
                     </th>
                     <th>
-                      Create At
+                    Report Contact Customer
+                    </th>
+                    <th>
+                    Report Date
                     </th>
                  </tr>
               </thead>
@@ -119,10 +122,13 @@
                         {{$transaction_temp->reportExchange}}
                       </td>
                       <td>
-                        {{$transaction_temp->reportDate}}
+                        {{$transaction_temp->reportSupportTeam}}
                       </td>
                       <td>
-                        {{$transaction_temp->created_at}}
+                        {{$transaction_temp->reportContactCustomers}}
+                      </td>
+                      <td>
+                        {{$transaction_temp->reportDate}}
                       </td>
                   </tr>
                   @endforeach

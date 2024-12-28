@@ -20,6 +20,7 @@ use App\Models\Transaction_Temp;
 use App\Models\CustomerItem;
 use App\Models\CustomerReport;
 use Illuminate\Support\Facades\Log;
+use App\Models\CustomerAdditional;
 
 class UserManageController extends Controller
 {
@@ -349,7 +350,6 @@ class UserManageController extends Controller
     public function showReportTrading(Request $request, $id = null)
     {
         try {
-            Log::error('This is a test error for Telegram integration.');
             // Retrieve all customers for the dropdown
             $customers = Customer::all();
             $id = $request->query('id', $id);
@@ -379,5 +379,22 @@ class UserManageController extends Controller
         }
     }
 
+    //==============Share Report Trading===================//
+    public function showUserActiveCore(Request $request)
+    {
+        try {
+            // Retrieve all user
+            $customerReport = CustomerAdditional::join('customers', 'customer_additional.customer_id', '=', 'customers.customer_id')
+                ->select('customer_additional.*', 'customers.full_name as customer_name')
+                ->orderBy('customer_additional.updated_at', 'desc') // Order by created_at in descending order
+                ->get();
+
+            $data = compact('customerReport');
+            return view('usermanage.active-core', $data);
+        } catch (\Exception $e) {
+            return redirect()->route('showReportTrading')
+                ->withErrors('Show User Active Core failed: ' . $e->getMessage());
+        }
+    }
 
 }

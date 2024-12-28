@@ -23,6 +23,8 @@ class CustomerReport extends Authenticatable
         'reportNet',
         'reportVolume',
         'reportExchange',
+        'reportSupportTeam',
+        'reportContactCustomers',
         'reportDate',
     ];
 

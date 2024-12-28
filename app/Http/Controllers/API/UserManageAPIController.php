@@ -291,20 +291,22 @@ class UserManageAPIController extends Controller
             }
 
             //Add  CustomerReport
-            if($request->reportNet || $request->reportVolume || $request->reportExchange || $request->reportDate){
+            if($request->reportNet || $request->reportVolume || $request->reportExchange || $request->reportDate || $request->reportSupportTeam || $request->reportContactCustomers){
                 CustomerReport::create([
                     'customer_id' => $request->telegramid,
                     'reportNet' => $request->reportNet ?? null,
                     'reportVolume' => $request->reportVolume ?? null,
                     'reportExchange' => $request->reportExchange ?? null,
+                    'reportSupportTeam' => $request->reportSupportTeam ?? null,
+                    'reportContactCustomers' => $request->reportContactCustomers ?? null,
                     'reportDate' => $request->reportDate ?? null
                 ]);
             }
-
+            Log::info('Customer ID ' . $request->telegramid . ' Update profile successfully!');
             return response()->json(['user' => $request->telegramid, 'message' => 'Update profile successfully!'], 201);
         } 
         catch (\Exception $e) {
-            Log::error('Update profile failed: ' . $e->getMessage());
+            Log::error('Customer ID ' . $request->telegramid . ' Update profile failed: ' . $e->getMessage());
             return response()->json(['error' => 'Update profile failed.'], 500);
         }
     }

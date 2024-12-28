@@ -108,6 +108,7 @@ Route::controller(UserManageController::class)->middleware('auth')->group(functi
     Route::get('/commissionmlm', 'showCommissionMLM')->name('showCommissionMLM')->middleware('level:0');
     Route::post('/calculate-mlm/{id}/calculate', 'calculateMLM')->name('calculateMLM')->middleware('level:0');
     Route::get('/report-trading/{id?}', 'showReportTrading')->name('showReportTrading')->middleware('level:0');
+    Route::get('/user-activity', 'showUserActiveCore')->name('showUserActiveCore')->middleware('level:0');
 });
 
 //Deposit Management Controller
