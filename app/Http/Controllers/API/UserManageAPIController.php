@@ -81,7 +81,7 @@ class UserManageAPIController extends Controller
                     Customer::create([
                         'customer_id' => $request->telegramid,
                         'user_id' => $request->telegramid,
-                        'user_sponser_id' => $request->sponser_userid,
+                        'user_sponser_id' => $request->telegramid == $request->sponser_userid ? 1 : $request->sponser_userid,
                         'full_name' => $request->fullname ?? '',
                         'phone' => $request->phone ?? '',
                         'image_font_id' => $path1 ?? '',
