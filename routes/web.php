@@ -131,6 +131,7 @@ Route::controller(DepositManageController::class)->middleware('auth')->group(fun
 });
 
 //Withdraw Management Controller
+//test cai nha
 Route::controller(WithdrawManageController::class)->middleware('auth')->group(function() {
     Route::get('/withdrawTransaction', 'showWithDrawList')->name('showWithDrawList')->middleware('level:0');
     Route::get('/withdrawHistory', 'showWithDrawHistory')->name('showWithDrawHistory')->middleware('level:0');
